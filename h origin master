@@ -1,0 +1,29 @@
+[33mcommit d1900a498067ebc7bfa39c3ea6251b602dd1f5d3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m
+Author: Groot616 <nable2797@naver.com>
+Date:   Thu Jul 31 19:15:33 2025 +0900
+
+    Remove specified Assets folders from git tracking
+
+[33mcommit 199f2fa57e0ea8e7ff00e72ff7ae7ccb8ed418ee[m
+Author: Groot616 <nable2797@naver.com>
+Date:   Thu Jul 31 18:44:38 2025 +0900
+
+    Remove Library folder from git tracking
+
+[33mcommit 81a5ad5dbc15417a00f1bac8ce98bb0eb044a05b[m
+Author: Groot616 <nable2797@naver.com>
+Date:   Thu Jul 31 18:40:36 2025 +0900
+
+    Add large file with Git LFS
+
+[33mcommit d36805efb816368f6b3904fa902d08d66e9aa1a8[m
+Author: Groot616 <nable2797@naver.com>
+Date:   Thu Jul 31 18:24:24 2025 +0900
+
+    first commit
+
+[33mcommit e0fb82562cbe2077ab240c87a0034a3c0117923e[m
+Author: LENOVO <LENOVO@DESKTOP-FODS68F>
+Date:   Thu Jul 31 17:49:34 2025 +0900
+
+    .gitattributes 및 .gitignore을(를) 추가합니다.

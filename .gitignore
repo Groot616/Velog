@@ -361,3 +361,22 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+Library/
+Temp/
+Obj/
+Build/
+Builds/
+Logs/
+MemoryCaptures/
+
+# Assets 폴더 내 특정 폴더/파일 무시하기
+
+Assets/Sprites/
+Assets/Scenes/
+Assets/Scripts/
+Assets/Settings/
+Assets/Artwork/
+
+*.asset
+*.asset.meta
