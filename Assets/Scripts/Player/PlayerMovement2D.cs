@@ -49,9 +49,22 @@ public class PlayerMovement2D : MonoBehaviour
             moveInput = 0f;
         }
         isMoving = (moveInput != 0);
+        //if (isMoving)
+        //{
+        //    spriteRenderer.flipX = moveInput < 0;
+        //}
         if (isMoving)
         {
-            spriteRenderer.flipX = moveInput < 0;
+            bool newFlipX = moveInput < 0;
+            if (spriteRenderer.flipX != newFlipX)
+            {
+                spriteRenderer.flipX = newFlipX;
+
+                // AttackRange를 Scale로 반전 (Position 만지지 마라)
+                Vector3 attackScale = attackRange.transform.localScale;
+                attackScale.x = spriteRenderer.flipX ? -1 : 1;
+                attackRange.transform.localScale = attackScale;
+            }
         }
         animator.SetBool("isMoving", isMoving);
 

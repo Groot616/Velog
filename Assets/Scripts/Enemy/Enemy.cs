@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Runtime.CompilerServices;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 
 [System.Serializable]
@@ -32,6 +33,8 @@ public class BasicInfo
         Move,
         Attack
     }
+
+    [SerializeField]
     private State currentState;
     public State CurrentState
     {
@@ -196,6 +199,46 @@ public class Detection
         get => isTeleporting;
         set => isTeleporting = value;
     }
+
+    [SerializeField]
+    private bool inRange = false;
+    public bool InRange
+    {
+        get => inRange;
+        set => inRange = value;
+    }
+
+    [SerializeField]
+    private bool inAttackRange = false;
+    public bool InAttackRange
+    {
+        get => inAttackRange;
+        set => inAttackRange = value;
+    }
+
+    [SerializeField]
+    private Transform totalDetectionCenter;
+    public Transform TotalDetectionCenter
+    {
+        get => totalDetectionCenter;
+        set => totalDetectionCenter = value;
+    }
+
+    [SerializeField]
+    private float totalDetectionRadius = 6.9f;
+    public float TotalDetectionRadius
+    {
+        get => totalDetectionRadius;
+        set => totalDetectionRadius = value;
+    }
+
+    [SerializeField]
+    private bool inTotalDetectionRange = false;
+    public bool InTotalDetectionRange
+    {
+        get => inTotalDetectionRange;
+        set => inTotalDetectionRange = value;
+    }
 }
 
 public class Enemy : MonoBehaviour
@@ -214,7 +257,7 @@ public class Enemy : MonoBehaviour
 
     void Start()
     {
-        basicInfo.CurrentState = BasicInfo.State.Idle;
+        basicInfo.CurrentState = BasicInfo.State.Move;
         basicComponents.Init(gameObject);
 
         if (detection == null)
@@ -228,69 +271,46 @@ public class Enemy : MonoBehaviour
     }
     void Update()
     {
-        bool inRange = CheckPlayerInRange(detection.DetectionCenter.transform.position, detection.DetectRadius, detection.PlayerLayer);
-        bool inAttackRange = CheckPlayerInRange(detection.DetectionCenter.position, detection.AttackRadius, detection.PlayerLayer);
+        //if (basicInfo.IsAttacked && !detection.InRange)
+        //{
+        //    basicInfo.IsTracing = false;
+        //    //basicInfo.IsAttacked = false;
+        //}
 
-        if (detection.Player != null && inRange)
+        if(basicInfo.IsAttacked && !detection.InTotalDetectionRange)
+            basicInfo.IsAttacked = false;
+
+        //if(!detection.InRange && basicInfo.IsAttacked)
+        //{
+        //    basicInfo.IsAttacked = false;
+        //    basicInfo.IsTracing = false;
+        //    basicInfo.CurrentState = BasicInfo.State.Idle;
+        //}
+
+        switch (basicInfo.CurrentState)
         {
-            if (!basicInfo.IsDie)
-            {
-                if (!detection.IsAttacking && !basicInfo.IsWaitingAttack)
-                {
-                    MoveTowardsPlayer();
-                }
-
-                if (inAttackRange)
-                {
-                    basicInfo.IsWaitingAttack = true;
-                    basicComponents.Animator.SetBool("isMoving", false);
-                    Attack();
-                    basicInfo.IsWaitingAttack = false;
-                    //basicComponents.Animator.SetBool("isMoving", true);
-                }
-            }
-        }
-        else if (basicInfo.IsMoving && detection.Target != null && !basicInfo.IsDie)
-        {
-            Vector2 targetPos = new Vector2(detection.Target.position.x, transform.position.y);
-            Vector2 direction = (targetPos - (Vector2)transform.position).normalized;
-            basicInfo.MoveDirection = direction;
-            basicComponents.SpriteRenderer.flipX = targetPos.x > transform.position.x;
-
-            // 코드 추가
-            Vector2 localPosDetection = detection.DetectionCenter.localPosition;
-            localPosDetection.x = Mathf.Abs(localPosDetection.x) * (basicComponents.SpriteRenderer.flipX ? 1 : -1);
-            detection.DetectionCenter.localPosition = localPosDetection;
-
-            Vector2 localPosAttack = detection.AttackCenter.localPosition;
-            localPosAttack.x = Mathf.Abs(localPosAttack.x) * (basicComponents.SpriteRenderer.flipX ? 1 : -1);
-            detection.AttackCenter.localPosition = localPosAttack;
-            //
-
-            if (Vector2.Distance(transform.position, targetPos) < 0.1f)
-            {
-                basicInfo.MoveDirection = Vector2.zero;
-                StartCoroutine(Wait());
-                detection.Target = (detection.Target == detection.PointA) ? detection.PointB : detection.PointA;
-            }
-        }
-        else
-        {
-            basicInfo.MoveDirection = Vector2.zero;
+            case BasicInfo.State.Idle:
+                HandleIdle();
+                break;
+            case BasicInfo.State.Move:
+                HandleMove();
+                break;
+            case BasicInfo.State.Attack:
+                HandleAttack();
+                break;
         }
 
-        if (basicInfo.IsMoving && !inRange)
-        {
+        if (!detection.InRange)
             basicInfo.IsTracing = false;
-        }
-
-        if (basicInfo.IsAttacked)
-            MoveTowardsPlayer();
     }
 
     void FixedUpdate()
     {
-        if (basicInfo.IsMoving)
+        detection.InRange = CheckPlayerInRange(detection.DetectionCenter.position, detection.DetectRadius, detection.PlayerLayer);
+        detection.InAttackRange = CheckPlayerInRange(detection.AttackCenter.position, detection.AttackRadius, detection.PlayerLayer);
+        detection.InTotalDetectionRange = CheckPlayerInRange(detection.TotalDetectionCenter.position, detection.TotalDetectionRadius, detection.PlayerLayer);
+
+        if (basicInfo.IsMoving && !detection.IsTeleporting)
         {
             if (basicInfo.IsTracing)
                 basicComponents.Rigidbody.MovePosition(basicComponents.Rigidbody.position + basicInfo.MoveDirection * basicInfo.SpeedForTracing * Time.fixedDeltaTime);
@@ -299,25 +319,114 @@ public class Enemy : MonoBehaviour
         }
     }
 
+    void HandleIdle()
+    {
+        basicInfo.MoveDirection = Vector2.zero;
+
+        if (detection.InRange && detection.Player != null && !basicInfo.IsDie)
+        {
+            basicInfo.CurrentState = BasicInfo.State.Move;
+        }
+        if (detection.InAttackRange && detection.Player != null && !basicInfo.IsDie)
+        {
+            basicInfo.CurrentState = BasicInfo.State.Attack;
+        }
+    }
+
+    void HandleMove()
+    {
+        //if (basicInfo.IsAttacked && !basicInfo.IsDie)
+        //{
+        //    Debug.Log("MoveTowardsPlayer called!");
+        //    MoveTowardsPlayer();
+        //}
+        if (detection.InRange && detection.Player != null && !basicInfo.IsDie)
+        {
+            MoveTowardsPlayer();
+        }
+
+        if (detection.InAttackRange && detection.Player != null && !basicInfo.IsDie)
+        {
+            basicInfo.CurrentState = BasicInfo.State.Attack;
+        }
+
+        if (!basicInfo.IsTracing)
+            Patrol();
+    }
+
+    void HandleAttack()
+    {
+        if (detection.IsAttacking || basicInfo.IsWaitingAttack || basicInfo.IsDie)
+            return;
+
+        if (detection.InAttackRange && detection.Player != null)
+        {
+            basicComponents.Animator.SetBool("isMoving", false);
+            basicComponents.Animator.SetBool("isAttacking", false);
+            Attack();
+        }
+        else if (detection.InRange && detection.Player != null)
+        {
+            // 공격범위 밖이지만 플레이어 감지 범위 안이라면 추적
+            basicInfo.CurrentState = BasicInfo.State.Attack; // 상태 유지
+            MoveTowardsPlayer();
+        }
+        else
+        {
+            // 플레이어가 감지 범위 밖이면 추적 끄고 순찰 모드로
+            basicInfo.CurrentState = BasicInfo.State.Move;
+            basicInfo.IsTracing = false;
+        }
+        //if (!detection.InAttackRange && detection.Player != null)
+        //{
+        //    basicInfo.CurrentState = BasicInfo.State.Move;
+        //    return;
+        //}
+        //basicComponents.Animator.SetBool("isMoving", false);
+        //basicComponents.Animator.SetBool("isAttacking", false);
+
+        //Attack();
+    }
+
+    void Patrol()
+    {
+        Vector2 targetPos = new Vector2(detection.Target.position.x, transform.position.y);
+        Vector2 direction = (targetPos - (Vector2)transform.position).normalized;
+        basicInfo.MoveDirection = direction;
+        basicComponents.SpriteRenderer.flipX = targetPos.x > transform.position.x;
+
+        // 코드 추가
+        Vector2 localPosDetection = detection.DetectionCenter.localPosition;
+        localPosDetection.x = Mathf.Abs(localPosDetection.x) * (basicComponents.SpriteRenderer.flipX ? 1 : -1);
+        detection.DetectionCenter.localPosition = localPosDetection;
+
+        Vector2 localPosAttack = detection.AttackCenter.localPosition;
+        localPosAttack.x = Mathf.Abs(localPosAttack.x) * (basicComponents.SpriteRenderer.flipX ? 1 : -1);
+        detection.AttackCenter.localPosition = localPosAttack;
+        //
+
+        if (Vector2.Distance(transform.position, targetPos) < 0.1f)
+        {
+            basicInfo.MoveDirection = Vector2.zero;
+            StartCoroutine(Wait());
+            detection.Target = (detection.Target == detection.PointA) ? detection.PointB : detection.PointA;
+        }
+    }
 
     private IEnumerator Wait()
     {
+        basicInfo.CurrentState = BasicInfo.State.Idle;
         basicInfo.IsMoving = false;
         basicComponents.Animator.SetBool("isMoving", basicInfo.IsMoving);
         yield return new WaitForSeconds(basicInfo.WaitingTime);
 
         basicInfo.IsMoving = true;
         basicComponents.Animator.SetBool("isMoving", basicInfo.IsMoving);
+        basicInfo.CurrentState = BasicInfo.State.Move;
     }
 
     bool CheckPlayerInRange(Vector2 origin, float radius, LayerMask layer)
     {
-        Collider2D hit = Physics2D.OverlapCircle(origin, radius, layer);
-        if (hit != null)
-        {
-            Debug.Log("Detected object: " + hit.name);
-        }
-
         return Physics2D.OverlapCircle(origin, radius, layer) != null;
     }
 
@@ -333,20 +442,20 @@ public class Enemy : MonoBehaviour
 
     void Attack()
     {
-        detection.IsAttacking = true;
-        basicComponents.Animator.SetBool("isAttacking", detection.IsAttacking);
+        MoveTowardsPlayer();
+        //basicInfo.CurrentState = BasicInfo.State.Attack;
         basicInfo.IsTracing = false;
         basicInfo.IsMoving = false;
         basicComponents.Animator.SetBool("isMoving", basicInfo.IsMoving);
+        detection.IsAttacking = true;
+        basicComponents.Animator.SetBool("isAttacking", detection.IsAttacking);
 
-        // 추가된코드
         Vector2 attackPoint = new Vector2(detection.Player.position.x, transform.position.y);
         Vector2 returnPoint = transform.position;
         if (!detection.IsTeleporting)
         {
             StartCoroutine(TeleportAndShake(attackPoint, returnPoint));
             StartChargeEffect();
-            //
         }
     }
 
@@ -359,15 +468,26 @@ public class Enemy : MonoBehaviour
 
         yield return new WaitForSeconds(1f);
         transform.position = returnPos;
-        detection.IsAttacking = false;
-        basicComponents.Animator.SetBool("isAttacking", detection.IsAttacking);
-        //basicInfo.IsMoving = true;
-        //basicComponents.Animator.SetBool("isMoving", basicInfo.IsMoving);
 
         yield return new WaitForSeconds(1.7f);
+        basicComponents.Animator.SetBool("isAttacking", detection.IsAttacking);
+        detection.IsAttacking = false;
         detection.IsTeleporting = false;
-        basicInfo.IsMoving = true;
-        basicComponents.Animator.SetBool("isMoving", true);
+
+        if (detection.InAttackRange && detection.Player != null && !basicInfo.IsDie)
+        {
+            basicInfo.CurrentState = BasicInfo.State.Attack;
+            basicInfo.IsMoving = false;
+            basicComponents.Animator.SetBool("isMoving", false);
+            basicComponents.Animator.SetBool("isAttacking", true);
+        }
+        else
+        {
+            basicInfo.CurrentState = BasicInfo.State.Move;
+            basicInfo.IsMoving = true;
+            basicComponents.Animator.SetBool("isMoving", true);
+            basicComponents.Animator.SetBool("isAttacking", false);
+        }
     }
 
     private IEnumerator CameraShake(float duration, float magnitude)
@@ -404,6 +524,12 @@ public class Enemy : MonoBehaviour
             Gizmos.color = Color.yellow;
             Gizmos.DrawWireSphere(detection.AttackCenter.position, detection.AttackRadius);
         }
+
+        if(detection.TotalDetectionCenter != null)
+        {
+            Gizmos.color = Color.blue;
+            Gizmos.DrawWireSphere(detection.TotalDetectionCenter.position, detection.TotalDetectionRadius);
+        }
     }
 
     public void StartChargeEffect()
@@ -433,6 +559,17 @@ public class Enemy : MonoBehaviour
     public void TakeDamage(float dmg)
     {
         basicInfo.IsAttacked = true;
+        // add code
+        Vector2 dirToPlayer = detection.Player.position - transform.position;
+        bool isPlayerRight = dirToPlayer.x < 0;
+        if (basicComponents.SpriteRenderer.flipX == isPlayerRight)
+            basicComponents.SpriteRenderer.flipX = !isPlayerRight;
+        // add code
+
+        basicInfo.IsTracing = true;
+        if (!basicInfo.IsDie)
+            basicInfo.CurrentState = BasicInfo.State.Move;
+
         basicInfo.Health -= dmg;
 
         if (basicInfo.Health <= 0)
