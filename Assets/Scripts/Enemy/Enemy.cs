@@ -287,20 +287,26 @@ public class Enemy : MonoBehaviour
         //    basicInfo.CurrentState = BasicInfo.State.Idle;
         //}
 
-        switch (basicInfo.CurrentState)
-        {
-            case BasicInfo.State.Idle:
-                HandleIdle();
-                break;
-            case BasicInfo.State.Move:
-                HandleMove();
-                break;
-            case BasicInfo.State.Attack:
-                HandleAttack();
-                break;
-        }
+        //switch (basicInfo.CurrentState)
+        //{
+        //    case BasicInfo.State.Idle:
+        //        HandleIdle();
+        //        break;
+        //    case BasicInfo.State.Move:
+        //        HandleMove();
+        //        break;
+        //    case BasicInfo.State.Attack:
+        //        HandleAttack();
+        //        break;
+        //}
+        if (basicInfo.CurrentState == BasicInfo.State.Attack)
+            HandleAttack();
+        else if (basicInfo.CurrentState == BasicInfo.State.Move)
+            HandleMove();
+        else if (basicInfo.CurrentState == BasicInfo.State.Idle)
+            HandleIdle();
 
-        if (!detection.InRange)
+        if (!detection.InTotalDetectionRange)
             basicInfo.IsTracing = false;
     }
 
@@ -344,10 +350,13 @@ public class Enemy : MonoBehaviour
         {
             MoveTowardsPlayer();
         }
-
-        if (detection.InAttackRange && detection.Player != null && !basicInfo.IsDie)
+        else if (detection.InAttackRange && detection.Player != null && !basicInfo.IsDie)
         {
             basicInfo.CurrentState = BasicInfo.State.Attack;
+        }
+        else if(detection.InTotalDetectionRange && detection.Player != null && !basicInfo.IsDie && basicInfo.IsAttacked)
+        {
+            MoveTowardsPlayer();
         }
 
         if (!basicInfo.IsTracing)
@@ -373,9 +382,17 @@ public class Enemy : MonoBehaviour
         }
         else
         {
-            // 플레이어가 감지 범위 밖이면 추적 끄고 순찰 모드로
-            basicInfo.CurrentState = BasicInfo.State.Move;
-            basicInfo.IsTracing = false;
+            if (basicInfo.IsAttacked)
+            {
+                basicInfo.IsTracing = false;
+                basicInfo.CurrentState = BasicInfo.State.Attack;
+            }
+            else
+            {
+                // 플레이어가 감지 범위 밖이면 추적 끄고 순찰 모드로
+                basicInfo.CurrentState = BasicInfo.State.Move;
+                basicInfo.IsTracing = false;
+            }
         }
         //if (!detection.InAttackRange && detection.Player != null)
         //{
@@ -438,6 +455,11 @@ public class Enemy : MonoBehaviour
         basicInfo.IsMoving = true;
         basicComponents.Animator.SetBool("isMoving", basicInfo.IsMoving);
         basicComponents.SpriteRenderer.flipX = direction.x > 0;
+
+        if(detection.InAttackRange)
+        {
+            basicInfo.CurrentState = BasicInfo.State.Attack;
+        }
     }
 
     void Attack()
@@ -560,15 +582,21 @@ public class Enemy : MonoBehaviour
     {
         basicInfo.IsAttacked = true;
         // add code
-        Vector2 dirToPlayer = detection.Player.position - transform.position;
-        bool isPlayerRight = dirToPlayer.x < 0;
-        if (basicComponents.SpriteRenderer.flipX == isPlayerRight)
-            basicComponents.SpriteRenderer.flipX = !isPlayerRight;
+        //Vector2 dirToPlayer = detection.Player.position - transform.position;
+        //bool isPlayerRight = dirToPlayer.x < 0;
+        //if (basicComponents.SpriteRenderer.flipX == isPlayerRight)
+        //    basicComponents.SpriteRenderer.flipX = !isPlayerRight;
         // add code
 
         basicInfo.IsTracing = true;
         if (!basicInfo.IsDie)
-            basicInfo.CurrentState = BasicInfo.State.Move;
+        {
+            if(detection.InAttackRange)
+                basicInfo.CurrentState = BasicInfo.State.Attack;
+            else
+                basicInfo.CurrentState = BasicInfo.State.Move;
+        }
+            
 
         basicInfo.Health -= dmg;
 
