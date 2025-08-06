@@ -31,7 +31,9 @@ public class BasicInfo
     {
         Idle,
         Move,
-        Attack
+        Chase,
+        Attack,
+        Die
     }
 
     [SerializeField]
@@ -75,7 +77,7 @@ public class BasicInfo
     }
 
     [SerializeField]
-    private bool isTracing = true;
+    private bool isTracing = false;
     public bool IsTracing
     {
         get => isTracing;
@@ -280,31 +282,24 @@ public class Enemy : MonoBehaviour
         if(basicInfo.IsAttacked && !detection.InTotalDetectionRange)
             basicInfo.IsAttacked = false;
 
-        //if(!detection.InRange && basicInfo.IsAttacked)
-        //{
-        //    basicInfo.IsAttacked = false;
-        //    basicInfo.IsTracing = false;
-        //    basicInfo.CurrentState = BasicInfo.State.Idle;
-        //}
-
-        //switch (basicInfo.CurrentState)
-        //{
-        //    case BasicInfo.State.Idle:
-        //        HandleIdle();
-        //        break;
-        //    case BasicInfo.State.Move:
-        //        HandleMove();
-        //        break;
-        //    case BasicInfo.State.Attack:
-        //        HandleAttack();
-        //        break;
-        //}
-        if (basicInfo.CurrentState == BasicInfo.State.Attack)
-            HandleAttack();
-        else if (basicInfo.CurrentState == BasicInfo.State.Move)
-            HandleMove();
-        else if (basicInfo.CurrentState == BasicInfo.State.Idle)
-            HandleIdle();
+        switch (basicInfo.CurrentState)
+        {
+            case BasicInfo.State.Idle:
+                HandleIdle();
+                break;
+            case BasicInfo.State.Move:
+                HandleMove();
+                break;
+            case BasicInfo.State.Chase:
+                HandleChase();
+                break;
+            case BasicInfo.State.Attack:
+                HandleAttack();
+                break;
+            case BasicInfo.State.Die:
+                HandleDie();
+                break;
+        }
 
         if (!detection.InTotalDetectionRange)
             basicInfo.IsTracing = false;
@@ -329,42 +324,61 @@ public class Enemy : MonoBehaviour
     {
         basicInfo.MoveDirection = Vector2.zero;
 
-        if (detection.InRange && detection.Player != null && !basicInfo.IsDie)
-        {
-            basicInfo.CurrentState = BasicInfo.State.Move;
-        }
-        if (detection.InAttackRange && detection.Player != null && !basicInfo.IsDie)
+        // player가 공격 범위 내 존재할 경우 attack state 전환
+        if (detection.InAttackRange && detection.Player != null && !basicInfo.IsDie && basicInfo.IsTracing)
         {
             basicInfo.CurrentState = BasicInfo.State.Attack;
+            return;
         }
+        // player 발견시 chase state 전환
+        else if (detection.InRange && detection.Player != null && !basicInfo.IsDie && basicInfo.IsTracing)
+        {
+            basicInfo.CurrentState = BasicInfo.State.Chase;
+            return;
+        }
+
+        // TODO: 조건 확인해서 FSM 완성
+        //else if (basicInfo.IsAttacked)
+
+        //if (detection.InRange && detection.Player != null && !basicInfo.IsDie)
+        //{
+        //    basicInfo.CurrentState = BasicInfo.State.Chase;
+        //}
+        //if (detection.InAttackRange && detection.Player != null && !basicInfo.IsDie)
+        //{
+        //    basicInfo.CurrentState = BasicInfo.State.Attack;
+        //}
     }
 
     void HandleMove()
     {
-        //if (basicInfo.IsAttacked && !basicInfo.IsDie)
-        //{
-        //    Debug.Log("MoveTowardsPlayer called!");
-        //    MoveTowardsPlayer();
-        //}
-        if (detection.InRange && detection.Player != null && !basicInfo.IsDie)
-        {
-            MoveTowardsPlayer();
-        }
-        else if (detection.InAttackRange && detection.Player != null && !basicInfo.IsDie)
-        {
-            basicInfo.CurrentState = BasicInfo.State.Attack;
-        }
-        else if(detection.InTotalDetectionRange && detection.Player != null && !basicInfo.IsDie && basicInfo.IsAttacked)
-        {
-            MoveTowardsPlayer();
-        }
-
-        if (!basicInfo.IsTracing)
+        if (!basicInfo.IsTracing && !basicInfo.IsDie)
             Patrol();
+
+        if (detection.InRange || (detection.InTotalDetectionRange && basicInfo.IsAttacked && basicInfo.IsTracing))
+        {
+            basicInfo.CurrentState = BasicInfo.State.Chase;
+            return;
+        }
+    }
+
+    void HandleChase()
+    {
+        basicInfo.IsTracing = true;
+
+        if (detection.InAttackRange && detection.Player != null)
+        {
+            basicInfo.IsMoving = false;
+            basicInfo.CurrentState = BasicInfo.State.Attack;
+            return;
+        }
+        else if (detection.InRange || (detection.InTotalDetectionRange && basicInfo.IsTracing))
+            MoveTowardsPlayer();
     }
 
     void HandleAttack()
     {
+        basicInfo.IsTracing = true;
         if (detection.IsAttacking || basicInfo.IsWaitingAttack || basicInfo.IsDie)
             return;
 
@@ -376,33 +390,24 @@ public class Enemy : MonoBehaviour
         }
         else if (detection.InRange && detection.Player != null)
         {
-            // 공격범위 밖이지만 플레이어 감지 범위 안이라면 추적
-            basicInfo.CurrentState = BasicInfo.State.Attack; // 상태 유지
-            MoveTowardsPlayer();
+            basicInfo.CurrentState = BasicInfo.State.Chase;
+            return;
+        }
+        else if(detection.InTotalDetectionRange && detection.Player != null && basicInfo.IsTracing)
+        {
+            basicInfo.CurrentState = BasicInfo.State.Chase;
+            return;
         }
         else
         {
-            if (basicInfo.IsAttacked)
-            {
-                basicInfo.IsTracing = false;
-                basicInfo.CurrentState = BasicInfo.State.Attack;
-            }
-            else
-            {
-                // 플레이어가 감지 범위 밖이면 추적 끄고 순찰 모드로
-                basicInfo.CurrentState = BasicInfo.State.Move;
-                basicInfo.IsTracing = false;
-            }
+            basicInfo.CurrentState = BasicInfo.State.Move;
+            return;
         }
-        //if (!detection.InAttackRange && detection.Player != null)
-        //{
-        //    basicInfo.CurrentState = BasicInfo.State.Move;
-        //    return;
-        //}
-        //basicComponents.Animator.SetBool("isMoving", false);
-        //basicComponents.Animator.SetBool("isAttacking", false);
+    }
 
-        //Attack();
+    void HandleDie()
+    {
+        Die();
     }
 
     void Patrol()
@@ -464,8 +469,6 @@ public class Enemy : MonoBehaviour
 
     void Attack()
     {
-        MoveTowardsPlayer();
-        //basicInfo.CurrentState = BasicInfo.State.Attack;
         basicInfo.IsTracing = false;
         basicInfo.IsMoving = false;
         basicComponents.Animator.SetBool("isMoving", basicInfo.IsMoving);
@@ -505,12 +508,22 @@ public class Enemy : MonoBehaviour
         }
         else
         {
-            basicInfo.CurrentState = BasicInfo.State.Move;
-            basicInfo.IsMoving = true;
-            basicComponents.Animator.SetBool("isMoving", true);
-            basicComponents.Animator.SetBool("isAttacking", false);
+            if (detection.InTotalDetectionRange && detection.Player != null)
+            {
+                basicInfo.CurrentState = BasicInfo.State.Chase;
+                basicInfo.IsTracing = true;
+                basicComponents.Animator.SetBool("isMoving", true);
+                basicComponents.Animator.SetBool("isAttacking", false);
+            }
+            else
+            {
+                basicInfo.CurrentState = BasicInfo.State.Move;
+                basicInfo.IsMoving = true;
+                basicComponents.Animator.SetBool("isMoving", true);
+                basicComponents.Animator.SetBool("isAttacking", false);
+            }
+            }
         }
-    }
 
     private IEnumerator CameraShake(float duration, float magnitude)
     {
@@ -602,8 +615,8 @@ public class Enemy : MonoBehaviour
 
         if (basicInfo.Health <= 0)
         {
+            basicInfo.CurrentState = BasicInfo.State.Die;
             basicInfo.MoveDirection = Vector2.zero;
-            Die();
         }
     }
 
