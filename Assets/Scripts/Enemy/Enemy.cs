@@ -81,7 +81,13 @@ public class BasicInfo
     public bool IsTracing
     {
         get => isTracing;
-        set => isTracing = value;
+        set
+        {
+            if (isTracing != value)
+            {
+                isTracing = value;
+            }
+        }
     }
 
     private Vector2 moveDirection;
@@ -139,11 +145,32 @@ public class BasicInfo
         get => isAttacked;
         set => isAttacked = value;
     }
+
+    private bool isDieAnimationTriggered = false;
+    public bool IsDieAnimationTriggered
+    {
+        get => isDieAnimationTriggered;
+        set => isDieAnimationTriggered = value;
+    }
 }
 
 [System.Serializable]
 public class Detection
 {
+    private Vector2 detectionCenterOriginalLocalPos;
+    public Vector2 DetectionCenterOriginalLocalPos
+    {
+        get => detectionCenterOriginalLocalPos;
+        set => detectionCenterOriginalLocalPos = value;
+    }
+
+    private Vector2 attackCenterOriginalLocalPos;
+    public Vector2 AttackCenterOriginalLocalPos
+    {
+        get => attackCenterOriginalLocalPos;
+        set => attackCenterOriginalLocalPos = value;
+    }
+
     [SerializeField]
     private Transform pointA;
     public Transform PointA => pointA;
@@ -262,6 +289,16 @@ public class Enemy : MonoBehaviour
         basicInfo.CurrentState = BasicInfo.State.Move;
         basicComponents.Init(gameObject);
 
+        Vector2 detectionPos = detection.DetectionCenter.localPosition;
+        detectionPos.x = Mathf.Abs(detectionPos.x);
+        //detectionPos.y = Mathf.Abs(detectionPos.y);
+        detection.DetectionCenterOriginalLocalPos = detectionPos;
+
+        Vector2 attackPos = detection.AttackCenter.localPosition;
+        attackPos.x = Mathf.Abs(attackPos.x);
+        //attackPos.y = Mathf.Abs(attackPos.y);
+        detection.AttackCenterOriginalLocalPos = attackPos;
+
         if (detection == null)
             return;
         detection.Target = detection.PointB;
@@ -273,13 +310,10 @@ public class Enemy : MonoBehaviour
     }
     void Update()
     {
-        //if (basicInfo.IsAttacked && !detection.InRange)
-        //{
-        //    basicInfo.IsTracing = false;
-        //    //basicInfo.IsAttacked = false;
-        //}
+        FlipDetectionCenterAccordingToDetection();
+        detection.InAttackRange = CheckPlayerInRange(detection.AttackCenter.position, detection.AttackRadius, detection.PlayerLayer);
 
-        if(basicInfo.IsAttacked && !detection.InTotalDetectionRange)
+        if (basicInfo.IsAttacked && !detection.InTotalDetectionRange)
             basicInfo.IsAttacked = false;
 
         switch (basicInfo.CurrentState)
@@ -382,16 +416,17 @@ public class Enemy : MonoBehaviour
         if (detection.IsAttacking || basicInfo.IsWaitingAttack || basicInfo.IsDie)
             return;
 
+        if(basicInfo.Health <= 0)
+        {
+            basicInfo.CurrentState = BasicInfo.State.Die;
+            return;
+        }
+
         if (detection.InAttackRange && detection.Player != null)
         {
             basicComponents.Animator.SetBool("isMoving", false);
             basicComponents.Animator.SetBool("isAttacking", false);
             Attack();
-        }
-        else if (detection.InRange && detection.Player != null)
-        {
-            basicInfo.CurrentState = BasicInfo.State.Chase;
-            return;
         }
         else if(detection.InTotalDetectionRange && detection.Player != null && basicInfo.IsTracing)
         {
@@ -410,6 +445,28 @@ public class Enemy : MonoBehaviour
         Die();
     }
 
+    void FlipDetectionCenterAccordingToDetection()
+    {
+        if (detection.DetectionCenter == null || detection.AttackCenter == null)
+            return;
+
+        Vector2 detectionOriginalPos = detection.DetectionCenterOriginalLocalPos;
+        Vector2 attackOriginalPos = detection.AttackCenterOriginalLocalPos;
+        bool facingRight = basicComponents.SpriteRenderer.flipX;
+        if (facingRight)
+        {
+            // 오른쪽 바라볼 때는 x를 양수로 유지, y는 그대로
+            detection.DetectionCenter.localPosition = new Vector2(Mathf.Abs(detectionOriginalPos.x), detectionOriginalPos.y);
+            detection.AttackCenter.localPosition = new Vector2(Mathf.Abs(attackOriginalPos.x), attackOriginalPos.y);
+        }
+        else
+        {
+            // 왼쪽 바라볼 때는 x를 음수로 뒤집고, y는 그대로
+            detection.DetectionCenter.localPosition = new Vector2(-Mathf.Abs(detectionOriginalPos.x), detectionOriginalPos.y);
+            detection.AttackCenter.localPosition = new Vector2(-Mathf.Abs(attackOriginalPos.x), attackOriginalPos.y);
+        }
+    }
+
     void Patrol()
     {
         Vector2 targetPos = new Vector2(detection.Target.position.x, transform.position.y);
@@ -417,15 +474,16 @@ public class Enemy : MonoBehaviour
         basicInfo.MoveDirection = direction;
         basicComponents.SpriteRenderer.flipX = targetPos.x > transform.position.x;
 
-        // 코드 추가
-        Vector2 localPosDetection = detection.DetectionCenter.localPosition;
-        localPosDetection.x = Mathf.Abs(localPosDetection.x) * (basicComponents.SpriteRenderer.flipX ? 1 : -1);
-        detection.DetectionCenter.localPosition = localPosDetection;
+        //// 코드 추가
+        //Vector2 localPosDetection = detection.DetectionCenter.localPosition;
+        //localPosDetection.x = Mathf.Abs(localPosDetection.x) * (basicComponents.SpriteRenderer.flipX ? 1 : -1);
+        //detection.DetectionCenter.localPosition = localPosDetection;
 
-        Vector2 localPosAttack = detection.AttackCenter.localPosition;
-        localPosAttack.x = Mathf.Abs(localPosAttack.x) * (basicComponents.SpriteRenderer.flipX ? 1 : -1);
-        detection.AttackCenter.localPosition = localPosAttack;
-        //
+        //Vector2 localPosAttack = detection.AttackCenter.localPosition;
+        //localPosAttack.x = Mathf.Abs(localPosAttack.x) * (basicComponents.SpriteRenderer.flipX ? 1 : -1);
+        //detection.AttackCenter.localPosition = localPosAttack;
+        ////
+        FlipDetectionCenterAccordingToDetection();
 
         if (Vector2.Distance(transform.position, targetPos) < 0.1f)
         {
@@ -593,39 +651,39 @@ public class Enemy : MonoBehaviour
 
     public void TakeDamage(float dmg)
     {
-        basicInfo.IsAttacked = true;
-        // add code
-        //Vector2 dirToPlayer = detection.Player.position - transform.position;
-        //bool isPlayerRight = dirToPlayer.x < 0;
-        //if (basicComponents.SpriteRenderer.flipX == isPlayerRight)
-        //    basicComponents.SpriteRenderer.flipX = !isPlayerRight;
-        // add code
-
-        basicInfo.IsTracing = true;
-        if (!basicInfo.IsDie)
-        {
-            if(detection.InAttackRange)
-                basicInfo.CurrentState = BasicInfo.State.Attack;
-            else
-                basicInfo.CurrentState = BasicInfo.State.Move;
-        }
-            
+        if (basicInfo.IsDie)
+            return;
 
         basicInfo.Health -= dmg;
+        basicInfo.IsAttacked = true;
+        basicInfo.IsTracing = true;
 
         if (basicInfo.Health <= 0)
         {
-            basicInfo.CurrentState = BasicInfo.State.Die;
             basicInfo.MoveDirection = Vector2.zero;
+            basicInfo.CurrentState = BasicInfo.State.Die;
+            return;
         }
+
+        basicInfo.CurrentState = BasicInfo.State.Chase;
     }
 
     public void Die()
     {
+        if (basicInfo.IsDieAnimationTriggered)
+            return;
+
+        basicInfo.IsDieAnimationTriggered = true;
+        Collider2D collider = GetComponent<Collider2D>();
+        if (collider != null)
+            collider.enabled = false;
+
+        basicComponents.Animator.SetTrigger("Die");
+
         StartCoroutine(DeathTeloportSequence());
     }
 
-    private IEnumerator DeathTeloportSequence()
+        private IEnumerator DeathTeloportSequence()
     {
         Vector2 OriginPos = transform.position;
 
@@ -645,7 +703,6 @@ public class Enemy : MonoBehaviour
         basicInfo.IsMoving = false;
         basicInfo.IsWaitingAttack = false;
         basicInfo.IsTracing = false;
-        basicComponents.Animator.SetTrigger("Die");
         yield return new WaitForSeconds(2f);
         Destroy(gameObject);
     }
