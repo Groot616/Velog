@@ -152,6 +152,14 @@ public class BasicInfo
         get => isDieAnimationTriggered;
         set => isDieAnimationTriggered = value;
     }
+
+    [SerializeField]
+    private float damage = 10;
+    public float Damage
+    {
+        get => damage;
+        set => damage = value;
+    }
 }
 
 [System.Serializable]
@@ -547,9 +555,18 @@ public class Enemy : MonoBehaviour
         detection.IsTeleporting = true;
         yield return new WaitForSeconds(basicInfo.WaitingAttack);
         transform.position = targetPos;
+        // 추가 코드
+        //if(AttackRange != null)
+        //{
+        //    AttackRange.SetActive(true);
+        //}
+        // 추가 코드
         StartCoroutine(CameraShake(0.3f, 0.1f));
 
         yield return new WaitForSeconds(1f);
+        // 추가 코드
+        //Invoke(nameof(DisableAttackRange(), 1f));
+        // 추가 코드
         transform.position = returnPos;
 
         yield return new WaitForSeconds(1.7f);

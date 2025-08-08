@@ -26,6 +26,8 @@ public class PlayerMovement2D : MonoBehaviour
     [SerializeField]
     private GameObject attackRange;
 
+    private bool isDie = false;
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -133,5 +135,32 @@ public class PlayerMovement2D : MonoBehaviour
             isJumping = false;
             animator.SetBool("isJumping", false);
         }
+    }
+
+    public void TakeDamage(float dmg)
+    {
+        Debug.Log("Player's TakeDamge() is called!");
+        if (isDie)
+            return;
+
+        health -= damage;
+        if (health <= 0)
+        {
+            isDie = true;
+            rb.linearVelocity = Vector2.zero;
+            Die();
+        }
+    }
+
+    private void Die()
+    {
+        animator.SetBool("isDie", true);
+        StartCoroutine(PlayDieAnimation());
+    }
+    
+    private IEnumerator PlayDieAnimation()
+    {
+        yield return new WaitForSeconds(1.5f);
+        Destroy(gameObject);
     }
 }
