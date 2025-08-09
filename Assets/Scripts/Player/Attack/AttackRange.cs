@@ -3,12 +3,11 @@ using UnityEngine;
 public class AttackRange : MonoBehaviour
 {
     private enum AttackerType { Player, Enemy };
+
+    [SerializeField]
     private AttackerType attackerType;
     private float damage;
     private Collider2D attackCollider;
-
-    //private PlayerMovement2D player;
-    //private float damage;
 
     private void Awake()
     {
@@ -19,15 +18,13 @@ public class AttackRange : MonoBehaviour
             attackerType = AttackerType.Player;
         else if (transform.root.CompareTag("Enemy"))
             attackerType = AttackerType.Enemy;
-
-        Debug.Log("AttackerType : " + attackerType);
     }
     public void SetDamage(float dmg)
     {
         damage = dmg;
     }
 
-    private void EnableAttackerCollider()
+    public void EnableAttackerCollider()
     {
         attackCollider.enabled = true;
     }
@@ -44,7 +41,6 @@ public class AttackRange : MonoBehaviour
             Enemy enemy = collision.GetComponent<Enemy>();
             if(enemy != null)
             {
-                Debug.Log("AttackRange class\\TakeDamage() is called!");
                 enemy.TakeDamage(damage);
             }
         }
@@ -57,17 +53,5 @@ public class AttackRange : MonoBehaviour
             }
 
         }
-        //if (collision.CompareTag("Enemy"))
-        //{
-        //    Enemy enemy = collision.GetComponent<Enemy>();
-        //    if (enemy != null)
-        //    {
-        //        if (damage <= 0f)
-        //        {
-        //            Debug.LogWarning("Damage is zero or less. Did you forget to set damage?");
-        //        }
-        //        enemy.TakeDamage(damage);
-        //    }
-        //}
     }
 }

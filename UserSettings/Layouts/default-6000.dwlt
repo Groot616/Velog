@@ -19,7 +19,7 @@ MonoBehaviour:
     width: 1536
     height: 780.8
   m_ShowMode: 4
-  m_Title: Scene
+  m_Title: Game
   m_RootView: {fileID: 6}
   m_MinSize: {x: 875, y: 300}
   m_MaxSize: {x: 10000, y: 10000}
@@ -48,7 +48,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 100}
   m_MaxSize: {x: 24288, y: 16192}
   vertical: 0
-  controlID: 43
+  controlID: 82
   draggingID: 0
 --- !u!114 &3
 MonoBehaviour:
@@ -371,9 +371,9 @@ MonoBehaviour:
       e32: 0
       e33: 1
   m_PreviewAnimator: {fileID: 0}
-  m_AnimatorController: {fileID: 9100000, guid: ee4cf4b2a666e004882e6e2c0716247d, type: 2}
+  m_AnimatorController: {fileID: 9100000, guid: fca7785ca1da1004aaaaf751ffab7ce3, type: 2}
   m_BreadCrumbs:
-  - m_Target: {fileID: 2042531764619000695, guid: ee4cf4b2a666e004882e6e2c0716247d, type: 2}
+  - m_Target: {fileID: 949594682528810660, guid: fca7785ca1da1004aaaaf751ffab7ce3, type: 2}
     m_ScrollPosition: {x: 0, y: 0}
   stateMachineGraph: {fileID: 0}
   stateMachineGraphGUI: {fileID: 0}
@@ -409,7 +409,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 508
-    width: 1203.8
+    width: 1204.6
     height: 270
   m_SerializedDataModeController:
     m_DataMode: 0
@@ -433,7 +433,7 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/Scripts/Enemy
+    - Assets/Scripts/Player/Attack
     m_Globs: []
     m_ProductIds: 
     m_AnyWithAssetOrigin: 0
@@ -443,16 +443,16 @@ MonoBehaviour:
   m_ViewMode: 1
   m_StartGridSize: 64
   m_LastFolders:
-  - Assets/Scripts/Enemy
+  - Assets/Scripts/Player/Attack
   m_LastFoldersGridSize: -1
   m_LastProjectPath: C:\Users\LENOVO\Velog
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 143}
-    m_SelectedIDs: 34b80000
-    m_LastClickedID: 47156
-    m_ExpandedIDs: 00000000beb60000
+    scrollPos: {x: 0, y: 86}
+    m_SelectedIDs: 1cb90000
+    m_LastClickedID: 47388
+    m_ExpandedIDs: 00000000deb60000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -481,7 +481,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 00000000beb60000
+    m_ExpandedIDs: 00000000deb60000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -507,10 +507,10 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_ListAreaState:
-    m_SelectedInstanceIDs: beb50000
-    m_LastClickedInstanceID: 46526
+    m_SelectedInstanceIDs: 70b50000
+    m_LastClickedInstanceID: 46448
     m_HadKeyboardFocusLastEvent: 1
-    m_ExpandedInstanceIDs: c6230000126f0000ccc70000
+    m_ExpandedInstanceIDs: c6230000126f0000ccc70000c4b80000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -629,7 +629,7 @@ MonoBehaviour:
       scrollPos: {x: 0, y: 0}
       m_SelectedIDs: 
       m_LastClickedID: 0
-      m_ExpandedIDs: 04fbffff98b50000beb50000
+      m_ExpandedIDs: 04fbffff58b5000098b50000beb50000
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 

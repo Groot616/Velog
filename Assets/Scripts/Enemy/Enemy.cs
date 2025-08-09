@@ -160,11 +160,15 @@ public class BasicInfo
         get => damage;
         set => damage = value;
     }
+
+    public AttackRange attackRange;
 }
 
 [System.Serializable]
 public class Detection
 {
+    public PlayerMovement2D playerMovement2D;
+
     private Vector2 detectionCenterOriginalLocalPos;
     public Vector2 DetectionCenterOriginalLocalPos
     {
@@ -202,11 +206,11 @@ public class Detection
     private LayerMask playerLayer;
     public LayerMask PlayerLayer => playerLayer;
 
-    private Transform player;
-    public Transform Player
+    private Transform playerPos;
+    public Transform PlayerPos
     {
-        get => player;
-        set => player = value;
+        get => playerPos;
+        set => playerPos = value;
     }
 
     [SerializeField]
@@ -294,8 +298,11 @@ public class Enemy : MonoBehaviour
 
     void Start()
     {
+        detection.playerMovement2D = GameObject.FindWithTag("Player").GetComponent<PlayerMovement2D>();
+
         basicInfo.CurrentState = BasicInfo.State.Move;
         basicComponents.Init(gameObject);
+        basicInfo.attackRange.GetComponent<AttackRange>().SetDamage(basicInfo.Damage);
 
         Vector2 detectionPos = detection.DetectionCenter.localPosition;
         detectionPos.x = Mathf.Abs(detectionPos.x);
@@ -312,7 +319,7 @@ public class Enemy : MonoBehaviour
         detection.Target = detection.PointB;
 
         basicComponents.Animator.SetBool("isMoving", basicInfo.IsMoving);
-        detection.Player = GameObject.FindWithTag("Player")?.transform;
+        detection.PlayerPos = GameObject.FindWithTag("Player")?.transform;
 
         basicComponents.Rigidbody.bodyType = RigidbodyType2D.Kinematic;
     }
@@ -367,34 +374,22 @@ public class Enemy : MonoBehaviour
         basicInfo.MoveDirection = Vector2.zero;
 
         // player가 공격 범위 내 존재할 경우 attack state 전환
-        if (detection.InAttackRange && detection.Player != null && !basicInfo.IsDie && basicInfo.IsTracing)
+        if (detection.InAttackRange && detection.PlayerPos != null && !basicInfo.IsDie && basicInfo.IsTracing && !detection.playerMovement2D.isDie)
         {
             basicInfo.CurrentState = BasicInfo.State.Attack;
             return;
         }
         // player 발견시 chase state 전환
-        else if (detection.InRange && detection.Player != null && !basicInfo.IsDie && basicInfo.IsTracing)
+        else if (detection.InRange && detection.PlayerPos != null && !basicInfo.IsDie && basicInfo.IsTracing)
         {
             basicInfo.CurrentState = BasicInfo.State.Chase;
             return;
         }
-
-        // TODO: 조건 확인해서 FSM 완성
-        //else if (basicInfo.IsAttacked)
-
-        //if (detection.InRange && detection.Player != null && !basicInfo.IsDie)
-        //{
-        //    basicInfo.CurrentState = BasicInfo.State.Chase;
-        //}
-        //if (detection.InAttackRange && detection.Player != null && !basicInfo.IsDie)
-        //{
-        //    basicInfo.CurrentState = BasicInfo.State.Attack;
-        //}
     }
 
     void HandleMove()
     {
-        if (!basicInfo.IsTracing && !basicInfo.IsDie)
+        if ((!basicInfo.IsTracing && !basicInfo.IsDie) || detection.playerMovement2D.isDie)
             Patrol();
 
         if (detection.InRange || (detection.InTotalDetectionRange && basicInfo.IsAttacked && basicInfo.IsTracing))
@@ -408,7 +403,7 @@ public class Enemy : MonoBehaviour
     {
         basicInfo.IsTracing = true;
 
-        if (detection.InAttackRange && detection.Player != null)
+        if (detection.InAttackRange && detection.PlayerPos != null)
         {
             basicInfo.IsMoving = false;
             basicInfo.CurrentState = BasicInfo.State.Attack;
@@ -430,13 +425,14 @@ public class Enemy : MonoBehaviour
             return;
         }
 
-        if (detection.InAttackRange && detection.Player != null)
+        if (detection.InAttackRange && detection.PlayerPos != null)
         {
             basicComponents.Animator.SetBool("isMoving", false);
             basicComponents.Animator.SetBool("isAttacking", false);
-            Attack();
+            if(!detection.playerMovement2D.isDie)
+                Attack();
         }
-        else if(detection.InTotalDetectionRange && detection.Player != null && basicInfo.IsTracing)
+        else if(detection.InTotalDetectionRange && detection.PlayerPos != null && basicInfo.IsTracing)
         {
             basicInfo.CurrentState = BasicInfo.State.Chase;
             return;
@@ -455,7 +451,7 @@ public class Enemy : MonoBehaviour
 
     void FlipDetectionCenterAccordingToDetection()
     {
-        if (detection.DetectionCenter == null || detection.AttackCenter == null)
+        if (detection == null || detection.DetectionCenter == null || detection.AttackCenter == null)
             return;
 
         Vector2 detectionOriginalPos = detection.DetectionCenterOriginalLocalPos;
@@ -520,7 +516,7 @@ public class Enemy : MonoBehaviour
 
     void MoveTowardsPlayer()
     {
-        Vector2 direction = new Vector2(detection.Player.position.x - transform.position.x, 0f).normalized;
+        Vector2 direction = new Vector2(detection.PlayerPos.position.x - transform.position.x, 0f).normalized;
         basicInfo.MoveDirection = direction;
         basicInfo.IsTracing = true;
         basicInfo.IsMoving = true;
@@ -541,7 +537,7 @@ public class Enemy : MonoBehaviour
         detection.IsAttacking = true;
         basicComponents.Animator.SetBool("isAttacking", detection.IsAttacking);
 
-        Vector2 attackPoint = new Vector2(detection.Player.position.x, transform.position.y);
+        Vector2 attackPoint = new Vector2(detection.PlayerPos.position.x, transform.position.y);
         Vector2 returnPoint = transform.position;
         if (!detection.IsTeleporting)
         {
@@ -555,18 +551,21 @@ public class Enemy : MonoBehaviour
         detection.IsTeleporting = true;
         yield return new WaitForSeconds(basicInfo.WaitingAttack);
         transform.position = targetPos;
-        // 추가 코드
-        //if(AttackRange != null)
-        //{
-        //    AttackRange.SetActive(true);
-        //}
-        // 추가 코드
         StartCoroutine(CameraShake(0.3f, 0.1f));
+        // 추가 코드
+        if (basicInfo.attackRange != null)
+        {
+            basicInfo.attackRange.GetComponent<AttackRange>().EnableAttackerCollider();
+        }
+        yield return new WaitForSeconds(0.1f);
+        // 추가 코드
+        // 추가 코드
+        if (basicInfo.attackRange != null)
+            basicInfo.attackRange.GetComponent<AttackRange>().DisableAttackerCollider();
+        // 추가 코드
 
         yield return new WaitForSeconds(1f);
-        // 추가 코드
-        //Invoke(nameof(DisableAttackRange(), 1f));
-        // 추가 코드
+        
         transform.position = returnPos;
 
         yield return new WaitForSeconds(1.7f);
@@ -574,7 +573,7 @@ public class Enemy : MonoBehaviour
         detection.IsAttacking = false;
         detection.IsTeleporting = false;
 
-        if (detection.InAttackRange && detection.Player != null && !basicInfo.IsDie)
+        if (detection.InAttackRange && detection.PlayerPos != null && !basicInfo.IsDie)
         {
             basicInfo.CurrentState = BasicInfo.State.Attack;
             basicInfo.IsMoving = false;
@@ -583,7 +582,7 @@ public class Enemy : MonoBehaviour
         }
         else
         {
-            if (detection.InTotalDetectionRange && detection.Player != null)
+            if (detection.InTotalDetectionRange && detection.PlayerPos != null)
             {
                 basicInfo.CurrentState = BasicInfo.State.Chase;
                 basicInfo.IsTracing = true;

@@ -12,6 +12,7 @@ public class PlayerMovement2D : MonoBehaviour
     private AttackRange attackRg;
     private float moveInput;
 
+    [SerializeField]
     private bool isMoving = false;
     public bool isAttacking = false;
 
@@ -26,7 +27,7 @@ public class PlayerMovement2D : MonoBehaviour
     [SerializeField]
     private GameObject attackRange;
 
-    private bool isDie = false;
+    public bool isDie = false;
 
     void Start()
     {
@@ -34,63 +35,66 @@ public class PlayerMovement2D : MonoBehaviour
         attackRg = GetComponentInChildren<AttackRange>();
         attackRg.SetDamage(damage);
 
-        if (attackRange != null)
-            attackRange.SetActive(false);
+        //if (attackRange != null)
+        //    attackRange.SetActive(false);
 
         Debug.Log("Collision occured? : " + attackRange.activeSelf);
     }
 
     void Update()
     {
-        if (!isAttacking)
+        if (!isDie)
         {
-            moveInput = Input.GetAxisRaw("Horizontal");
-        }
-        else
-        {
-            moveInput = 0f;
-        }
-        isMoving = (moveInput != 0);
-        //if (isMoving)
-        //{
-        //    spriteRenderer.flipX = moveInput < 0;
-        //}
-        if (isMoving)
-        {
-            bool newFlipX = moveInput < 0;
-            if (spriteRenderer.flipX != newFlipX)
+            if (!isAttacking)
             {
-                spriteRenderer.flipX = newFlipX;
-
-                // AttackRange를 Scale로 반전 (Position 만지지 마라)
-                Vector3 attackScale = attackRange.transform.localScale;
-                attackScale.x = spriteRenderer.flipX ? -1 : 1;
-                attackRange.transform.localScale = attackScale;
+                moveInput = Input.GetAxisRaw("Horizontal");
             }
-        }
-        animator.SetBool("isMoving", isMoving);
+            else
+            {
+                moveInput = 0f;
+            }
+            isMoving = (moveInput != 0);
+            //if (isMoving)
+            //{
+            //    spriteRenderer.flipX = moveInput < 0;
+            //}
+            if (isMoving)
+            {
+                bool newFlipX = moveInput < 0;
+                if (spriteRenderer.flipX != newFlipX)
+                {
+                    spriteRenderer.flipX = newFlipX;
 
-        if (Input.GetKeyDown(KeyCode.C) && !isAttacking)
-        {
-            Attack();
-        }
+                    // AttackRange를 Scale로 반전 (Position 만지지 마라)
+                    Vector3 attackScale = attackRange.transform.localScale;
+                    attackScale.x = spriteRenderer.flipX ? -1 : 1;
+                    attackRange.transform.localScale = attackScale;
+                }
+            }
+            animator.SetBool("isMoving", isMoving);
 
-        if (Input.GetKeyDown(KeyCode.X) && !isAttacking && !isJumping)
-        {
-            Jump();
-        }
+            if (Input.GetKeyDown(KeyCode.C) && !isAttacking)
+            {
+                Attack();
+            }
 
-        if (!isJumping && rb.linearVelocity.y < -0.1f)
-        {
-            isJumping = true;
-            animator.SetBool("isJumping", isJumping);
-            animator.SetTrigger("Jump");
+            if (Input.GetKeyDown(KeyCode.X) && !isAttacking && !isJumping)
+            {
+                Jump();
+            }
+
+            if (!isJumping && rb.linearVelocity.y < -0.1f)
+            {
+                isJumping = true;
+                animator.SetBool("isJumping", isJumping);
+                animator.SetTrigger("Jump");
+            }
         }
     }
 
     void FixedUpdate()
     {
-        if (!isAttacking)
+        if (!isAttacking && !isDie)
             rb.linearVelocity = new Vector2(moveInput * moveSpeed, rb.linearVelocity.y);
         else
             rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
@@ -105,7 +109,8 @@ public class PlayerMovement2D : MonoBehaviour
 
         if (attackRange != null)
         {
-            attackRange.SetActive(true);
+            //attackRange.SetActive(true);
+            attackRange.GetComponent<AttackRange>().EnableAttackerCollider();
         }
 
         Invoke(nameof(DisableAttackRange), 1f);
@@ -114,7 +119,10 @@ public class PlayerMovement2D : MonoBehaviour
     private void DisableAttackRange()
     {
         if (attackRange != null)
-            attackRange.SetActive(false);
+        {
+            // attackRange.SetActive(false);
+            attackRange.GetComponent<AttackRange>().DisableAttackerCollider();
+        }
         isAttacking = false;
     }
 
@@ -143,7 +151,7 @@ public class PlayerMovement2D : MonoBehaviour
         if (isDie)
             return;
 
-        health -= damage;
+        health -= dmg;
         if (health <= 0)
         {
             isDie = true;
@@ -160,7 +168,7 @@ public class PlayerMovement2D : MonoBehaviour
     
     private IEnumerator PlayDieAnimation()
     {
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(10f);
         Destroy(gameObject);
     }
 }
