@@ -154,7 +154,6 @@ public class PlayerMovement2D : MonoBehaviour
         health -= dmg;
         if (health <= 0)
         {
-            isDie = true;
             rb.linearVelocity = Vector2.zero;
             Die();
         }
@@ -162,7 +161,10 @@ public class PlayerMovement2D : MonoBehaviour
 
     private void Die()
     {
+        isDie = true;
+        isMoving = false;
         animator.SetBool("isDie", true);
+        animator.SetBool("isMoving", false);
         StartCoroutine(PlayDieAnimation());
     }
     

@@ -63,11 +63,17 @@
   <ItemGroup>
     <Compile Include="Assets\Hero Knight - Pixel Art\Demo\DestroyEvent_HeroKnight.cs" />
     <Compile Include="Assets\Hero Knight - Pixel Art\Demo\HeroKnight.cs" />
+    <Compile Include="Assets\Scripts\Enemy\EnemyState\AttackState.cs" />
+    <Compile Include="Assets\Scripts\Enemy\EnemyState\ChaseState.cs" />
     <Compile Include="Assets\Scripts\Player\PlayerMovement2D.cs" />
     <Compile Include="Assets\Hero Knight - Pixel Art\Demo\Sensor_HeroKnight.cs" />
     <Compile Include="Assets\Scripts\Player\AnimationEventsHandler\AnimationEventsHandler.cs" />
+    <Compile Include="Assets\Scripts\Interface\IEnemyState.cs" />
+    <Compile Include="Assets\Scripts\Enemy\EnemyState\DieState.cs" />
+    <Compile Include="Assets\Scripts\Enemy\EnemyState\IdleState.cs" />
     <Compile Include="Assets\Scripts\Enemy\Enemy.cs" />
     <Compile Include="Assets\Hero Knight - Pixel Art\ColorSwap\ColorSwap_HeroKnight.cs" />
+    <Compile Include="Assets\Scripts\Enemy\EnemyState\MoveState.cs" />
     <Compile Include="Assets\Scripts\Player\Attack\AttackRange.cs" />
   </ItemGroup>
   <ItemGroup>
