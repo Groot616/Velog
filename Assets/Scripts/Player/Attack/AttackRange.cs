@@ -1,57 +1,57 @@
-using UnityEngine;
+//using UnityEngine;
 
-public class AttackRange : MonoBehaviour
-{
-    private enum AttackerType { Player, Enemy };
+//public class AttackRange : MonoBehaviour
+//{
+//    private enum AttackerType { Player, Enemy };
 
-    [SerializeField]
-    private AttackerType attackerType;
-    private float damage;
-    private Collider2D attackCollider;
+//    [SerializeField]
+//    private AttackerType attackerType;
+//    private float damage;
+//    private Collider2D attackCollider;
 
-    private void Awake()
-    {
-        attackCollider = GetComponent<Collider2D>();
-        attackCollider.enabled = false;
+//    private void Awake()
+//    {
+//        attackCollider = GetComponent<Collider2D>();
+//        attackCollider.enabled = false;
 
-        if (transform.root.CompareTag("Player"))
-            attackerType = AttackerType.Player;
-        else if (transform.root.CompareTag("Enemy"))
-            attackerType = AttackerType.Enemy;
-    }
-    public void SetDamage(float dmg)
-    {
-        damage = dmg;
-    }
+//        if (transform.root.CompareTag("Player"))
+//            attackerType = AttackerType.Player;
+//        else if (transform.root.CompareTag("Enemy"))
+//            attackerType = AttackerType.Enemy;
+//    }
+//    public void SetDamage(float dmg)
+//    {
+//        damage = dmg;
+//    }
 
-    public void EnableAttackerCollider()
-    {
-        attackCollider.enabled = true;
-    }
+//    public void EnableAttackerCollider()
+//    {
+//        attackCollider.enabled = true;
+//    }
 
-    public void DisableAttackerCollider()
-    {
-        attackCollider.enabled = false;
-    }
+//    public void DisableAttackerCollider()
+//    {
+//        attackCollider.enabled = false;
+//    }
 
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (attackerType == AttackerType.Player && collision.CompareTag("Enemy"))
-        {
-            Enemy enemy = collision.GetComponent<Enemy>();
-            if(enemy != null)
-            {
-                enemy.TakeDamage(damage);
-            }
-        }
-        else if(attackerType == AttackerType.Enemy && collision.CompareTag("Player"))
-        {
-            PlayerMovement2D player = collision.GetComponent<PlayerMovement2D>();
-            if(player != null)
-            {
-                player.TakeDamage(damage);
-            }
+//    private void OnTriggerEnter2D(Collider2D collision)
+//    {
+//        if (attackerType == AttackerType.Player && collision.CompareTag("Enemy"))
+//        {
+//            Enemy enemy = collision.GetComponent<Enemy>();
+//            if(enemy != null)
+//            {
+//                enemy.TakeDamage(damage);
+//            }
+//        }
+//        else if(attackerType == AttackerType.Enemy && collision.CompareTag("Player"))
+//        {
+//            PlayerMovement2D player = collision.GetComponent<PlayerMovement2D>();
+//            if(player != null)
+//            {
+//                player.TakeDamage(damage);
+//            }
 
-        }
-    }
-}
+//        }
+//    }
+//}

@@ -161,7 +161,14 @@ public class BasicInfo
         set => damage = value;
     }
 
-    public AttackRange attackRange;
+    /*public AttackRange attackRange;*/
+
+    private bool isWaiting = false;
+    public bool IsWaiting
+    {
+        get => isWaiting;
+        set => isWaiting = value;
+    }
 }
 
 [System.Serializable]
@@ -206,6 +213,7 @@ public class Detection
     private LayerMask playerLayer;
     public LayerMask PlayerLayer => playerLayer;
 
+    [SerializeField]
     private Transform playerPos;
     public Transform PlayerPos
     {
@@ -311,14 +319,14 @@ public class Enemy : MonoBehaviour
 
     void Start()
     {
-        currentState = new MoveState();
+        currentState = moveState;
         currentState.Enter(this);
 
         detection.playerMovement2D = GameObject.FindWithTag("Player").GetComponent<PlayerMovement2D>();
 
         basicInfo.CurrentState = BasicInfo.State.Move;
         basicComponents.Init(gameObject);
-        basicInfo.attackRange.GetComponent<AttackRange>().SetDamage(basicInfo.Damage);
+        /*basicInfo.attackRange.GetComponent<AttackRange>().SetDamage(basicInfo.Damage);*/
 
         Vector2 detectionPos = detection.DetectionCenter.localPosition;
         detectionPos.x = Mathf.Abs(detectionPos.x);
@@ -340,40 +348,6 @@ public class Enemy : MonoBehaviour
     void Update()
     {
         currentState?.Update(this);
-
-        //FlipDetectionCenterAccordingToDetection();
-        //detection.InAttackRange = CheckPlayerInRange(detection.AttackCenter.position, detection.AttackRadius, detection.PlayerLayer);
-
-        //if (basicInfo.IsAttacked && !detection.InTotalDetectionRange)
-        //    basicInfo.IsAttacked = false;
-
-        //if (detection.playerMovement2D.isDie)
-        //{
-        //    basicInfo.IsTracing = false;
-        //    basicInfo.IsAttacked = false;
-        //}
-
-        //switch (basicInfo.CurrentState)
-        //{
-        //    case BasicInfo.State.Idle:
-        //        HandleIdle();
-        //        break;
-        //    case BasicInfo.State.Move:
-        //        HandleMove();
-        //        break;
-        //    case BasicInfo.State.Chase:
-        //        HandleChase();
-        //        break;
-        //    case BasicInfo.State.Attack:
-        //        HandleAttack();
-        //        break;
-        //    case BasicInfo.State.Die:
-        //        HandleDie();
-        //        break;
-        //}
-
-        //if (!detection.InTotalDetectionRange)
-        //    basicInfo.IsTracing = false;
     }
 
     void FixedUpdate()
@@ -391,37 +365,7 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    void HandleIdle()
-    {
-        basicInfo.MoveDirection = Vector2.zero;
-
-        // player가 공격 범위 내 존재할 경우 attack state 전환
-        if (detection.InAttackRange && detection.PlayerPos != null && !basicInfo.IsDie && basicInfo.IsTracing)
-        {
-            basicInfo.CurrentState = BasicInfo.State.Attack;
-            return;
-        }
-        // player 발견시 chase state 전환
-        else if (detection.InRange && detection.PlayerPos != null && !basicInfo.IsDie && basicInfo.IsTracing)
-        {
-            basicInfo.CurrentState = BasicInfo.State.Chase;
-            return;
-        }
-    }
-
-    void HandleMove()
-    {
-        if (!basicInfo.IsTracing && !basicInfo.IsDie)
-            Patrol();
-
-        if (detection.InRange || (detection.InTotalDetectionRange && basicInfo.IsAttacked && basicInfo.IsTracing))
-        {
-            basicInfo.CurrentState = BasicInfo.State.Chase;
-            return;
-        }
-    }
-
-    void HandleChase()
+    /*void HandleChase()
     {
         if (!detection.playerMovement2D.isDie)
         {
@@ -492,73 +436,14 @@ public class Enemy : MonoBehaviour
     {
         Die();
     }
-
-    void FlipDetectionCenterAccordingToDetection()
-    {
-        if (detection == null || detection.DetectionCenter == null || detection.AttackCenter == null)
-            return;
-
-        Vector2 detectionOriginalPos = detection.DetectionCenterOriginalLocalPos;
-        Vector2 attackOriginalPos = detection.AttackCenterOriginalLocalPos;
-        bool facingRight = basicComponents.SpriteRenderer.flipX;
-        if (facingRight)
-        {
-            // 오른쪽 바라볼 때는 x를 양수로 유지, y는 그대로
-            detection.DetectionCenter.localPosition = new Vector2(Mathf.Abs(detectionOriginalPos.x), detectionOriginalPos.y);
-            detection.AttackCenter.localPosition = new Vector2(Mathf.Abs(attackOriginalPos.x), attackOriginalPos.y);
-        }
-        else
-        {
-            // 왼쪽 바라볼 때는 x를 음수로 뒤집고, y는 그대로
-            detection.DetectionCenter.localPosition = new Vector2(-Mathf.Abs(detectionOriginalPos.x), detectionOriginalPos.y);
-            detection.AttackCenter.localPosition = new Vector2(-Mathf.Abs(attackOriginalPos.x), attackOriginalPos.y);
-        }
-    }
-
-    void Patrol()
-    {
-        Vector2 targetPos = new Vector2(detection.Target.position.x, transform.position.y);
-        Vector2 direction = (targetPos - (Vector2)transform.position).normalized;
-        basicInfo.MoveDirection = direction;
-        basicComponents.SpriteRenderer.flipX = targetPos.x > transform.position.x;
-
-        //// 코드 추가
-        //Vector2 localPosDetection = detection.DetectionCenter.localPosition;
-        //localPosDetection.x = Mathf.Abs(localPosDetection.x) * (basicComponents.SpriteRenderer.flipX ? 1 : -1);
-        //detection.DetectionCenter.localPosition = localPosDetection;
-
-        //Vector2 localPosAttack = detection.AttackCenter.localPosition;
-        //localPosAttack.x = Mathf.Abs(localPosAttack.x) * (basicComponents.SpriteRenderer.flipX ? 1 : -1);
-        //detection.AttackCenter.localPosition = localPosAttack;
-        ////
-        FlipDetectionCenterAccordingToDetection();
-
-        if (Vector2.Distance(transform.position, targetPos) < 0.1f)
-        {
-            basicInfo.MoveDirection = Vector2.zero;
-            StartCoroutine(Wait());
-            detection.Target = (detection.Target == detection.PointA) ? detection.PointB : detection.PointA;
-        }
-    }
-
-    private IEnumerator Wait()
-    {
-        basicInfo.CurrentState = BasicInfo.State.Idle;
-        basicInfo.IsMoving = false;
-        basicComponents.Animator.SetBool("isMoving", basicInfo.IsMoving);
-        yield return new WaitForSeconds(basicInfo.WaitingTime);
-
-        basicInfo.IsMoving = true;
-        basicComponents.Animator.SetBool("isMoving", basicInfo.IsMoving);
-        basicInfo.CurrentState = BasicInfo.State.Move;
-    }
+    */
 
     bool CheckPlayerInRange(Vector2 origin, float radius, LayerMask layer)
     {
         return Physics2D.OverlapCircle(origin, radius, layer) != null;
     }
 
-    void MoveTowardsPlayer()
+    /*void MoveTowardsPlayer()
     {
         Vector2 direction = new Vector2(detection.PlayerPos.position.x - transform.position.x, 0f).normalized;
         basicInfo.MoveDirection = direction;
@@ -662,7 +547,7 @@ public class Enemy : MonoBehaviour
         }
 
         basicInfo.Cam.transform.position = OriginPos;
-    }
+    }*/
 
     private void OnDrawGizmosSelected()
     {
@@ -685,7 +570,7 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    public void StartChargeEffect()
+    /*public void StartChargeEffect()
     {
         if (basicInfo.ChargeCoroutine != null)
             StopCoroutine(basicInfo.ChargeCoroutine);
@@ -765,7 +650,7 @@ public class Enemy : MonoBehaviour
         basicInfo.IsTracing = false;
         yield return new WaitForSeconds(2f);
         Destroy(gameObject);
-    }
+    }*/
 
     public void ResetFlagsForIdle()
     {
@@ -841,7 +726,11 @@ public class Enemy : MonoBehaviour
 
     public bool CanMove()
     {
-
+        return !detection.InRange
+            && !basicInfo.IsDie
+            && !basicInfo.IsTracing
+            && !basicInfo.IsWaitingAttack
+            && !detection.IsAttacking;
     }
 
     public bool CanChase()
@@ -866,8 +755,15 @@ public class Enemy : MonoBehaviour
             && !detection.playerMovement2D.isDie;
     }
 
-    public bool CanDie()
+    /*public bool CanDie()
     {
 
+    }*/
+
+    public void RunCoroutine(IEnumerator routine)
+    {
+        StartCoroutine(routine);
     }
+
+    
 }

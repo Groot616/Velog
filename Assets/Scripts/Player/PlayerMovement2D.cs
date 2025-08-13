@@ -9,7 +9,7 @@ public class PlayerMovement2D : MonoBehaviour
     [SerializeField]
     private Animator animator;
     private Rigidbody2D rb;
-    private AttackRange attackRg;
+    //private AttackRange attackRg;
     private float moveInput;
 
     [SerializeField]
@@ -32,13 +32,11 @@ public class PlayerMovement2D : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        attackRg = GetComponentInChildren<AttackRange>();
-        attackRg.SetDamage(damage);
+        /*attackRg = GetComponentInChildren<AttackRange>();
+        attackRg.SetDamage(damage);*/
 
         //if (attackRange != null)
         //    attackRange.SetActive(false);
-
-        Debug.Log("Collision occured? : " + attackRange.activeSelf);
     }
 
     void Update()
@@ -110,7 +108,7 @@ public class PlayerMovement2D : MonoBehaviour
         if (attackRange != null)
         {
             //attackRange.SetActive(true);
-            attackRange.GetComponent<AttackRange>().EnableAttackerCollider();
+            /*attackRange.GetComponent<AttackRange>().EnableAttackerCollider();*/
         }
 
         Invoke(nameof(DisableAttackRange), 1f);
@@ -121,7 +119,7 @@ public class PlayerMovement2D : MonoBehaviour
         if (attackRange != null)
         {
             // attackRange.SetActive(false);
-            attackRange.GetComponent<AttackRange>().DisableAttackerCollider();
+            /*attackRange.GetComponent<AttackRange>().DisableAttackerCollider();*/
         }
         isAttacking = false;
     }
