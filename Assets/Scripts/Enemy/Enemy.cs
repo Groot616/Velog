@@ -735,10 +735,18 @@ public class Enemy : MonoBehaviour
 
     public bool CanChase()
     {
+        Debug.Log($"CanChase check => " +
+        $"InRange: {detection.InRange}, " +
+        $"HasPlayer: {detection.PlayerPos}, " +
+        $"NotDie: {basicInfo.IsDie}, " +
+        $"NotWaitingAttack: {basicInfo.IsWaitingAttack}, " +
+        $"NotAttacking: {detection.IsAttacking}, " +
+        $"PlayerNotDie: {detection.playerMovement2D.isDie}");
+
         return detection.InRange
             && detection.PlayerPos != null
             && !basicInfo.IsDie
-            && basicInfo.IsTracing
+            //&& basicInfo.IsTracing
             && !basicInfo.IsWaitingAttack
             && !detection.IsAttacking
             && !detection.playerMovement2D.isDie;

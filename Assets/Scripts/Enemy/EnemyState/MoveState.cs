@@ -16,6 +16,10 @@ public class MoveState : IEnemyState
         if(enemy.CanMove())
         {
             Patrol(enemy);
+            if(enemy.CanChase())
+            {
+                enemy.ChangeState(enemy.ChaseState);
+            }
         }
     }
 
