@@ -161,7 +161,7 @@ public class BasicInfo
         set => damage = value;
     }
 
-    /*public AttackRange attackRange;*/
+    public AttackRange attackRange;
 
     private bool isWaiting = false;
     public bool IsWaiting
@@ -322,6 +322,8 @@ public class Enemy : MonoBehaviour
         currentState = moveState;
         currentState.Enter(this);
 
+        detection.InAttackRange = GetComponent<AttackRange>();
+
         detection.playerMovement2D = GameObject.FindWithTag("Player").GetComponent<PlayerMovement2D>();
 
         basicInfo.CurrentState = BasicInfo.State.Move;
@@ -347,7 +349,8 @@ public class Enemy : MonoBehaviour
     }
     void Update()
     {
-        currentState?.Update(this);
+        currentState?.Update();
+        Debug.Log("Current State : " + currentState.ToString());
     }
 
     void FixedUpdate()
@@ -365,24 +368,7 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    /*void HandleChase()
-    {
-        if (!detection.playerMovement2D.isDie)
-        {
-            basicInfo.IsTracing = true;
-        
-            if (detection.InAttackRange && detection.PlayerPos != null)
-            {
-                basicInfo.IsMoving = false;
-                basicInfo.CurrentState = BasicInfo.State.Attack;
-                return;
-            }
-            else if (detection.InRange || (detection.InTotalDetectionRange && basicInfo.IsTracing))
-                MoveTowardsPlayer();
-        }
-    }
-
-    void HandleAttack()
+    /*void HandleAttack()
     {
         if (detection.playerMovement2D.isDie)
         {
@@ -430,9 +416,9 @@ public class Enemy : MonoBehaviour
                 return;
             }
         }
-    }
+    }*/
 
-    void HandleDie()
+    /*void HandleDie()
     {
         Die();
     }
@@ -443,22 +429,7 @@ public class Enemy : MonoBehaviour
         return Physics2D.OverlapCircle(origin, radius, layer) != null;
     }
 
-    /*void MoveTowardsPlayer()
-    {
-        Vector2 direction = new Vector2(detection.PlayerPos.position.x - transform.position.x, 0f).normalized;
-        basicInfo.MoveDirection = direction;
-        basicInfo.IsTracing = true;
-        basicInfo.IsMoving = true;
-        basicComponents.Animator.SetBool("isMoving", basicInfo.IsMoving);
-        basicComponents.SpriteRenderer.flipX = direction.x > 0;
-
-        if(detection.InAttackRange)
-        {
-            basicInfo.CurrentState = BasicInfo.State.Attack;
-        }
-    }
-
-    void Attack()
+    /*void Attack()
     {
         basicInfo.IsTracing = false;
         basicInfo.IsMoving = false;
@@ -473,9 +444,9 @@ public class Enemy : MonoBehaviour
             StartCoroutine(TeleportAndShake(attackPoint, returnPoint));
             StartChargeEffect();
         }
-    }
+    }*/
 
-    private IEnumerator TeleportAndShake(Vector2 targetPos, Vector2 returnPos)
+    /*private IEnumerator TeleportAndShake(Vector2 targetPos, Vector2 returnPos)
     {
         detection.IsTeleporting = true;
         yield return new WaitForSeconds(basicInfo.WaitingAttack);
@@ -526,9 +497,9 @@ public class Enemy : MonoBehaviour
                 basicComponents.Animator.SetBool("isAttacking", false);
             }
             }
-        }
+        }*/
 
-    private IEnumerator CameraShake(float duration, float magnitude)
+    /*private IEnumerator CameraShake(float duration, float magnitude)
     {
         basicInfo.Cam = Camera.main;
         if (basicInfo.Cam == null) yield break;
@@ -715,7 +686,7 @@ public class Enemy : MonoBehaviour
     public void ChangeState(IEnemyState newState)
     {
         // 기존 상태가 있으면 Exit() 호출
-        currentState?.Exit(this);
+        currentState?.Exit();
 
         // 상태 변경
         currentState = newState;
@@ -735,18 +706,12 @@ public class Enemy : MonoBehaviour
 
     public bool CanChase()
     {
-        Debug.Log($"CanChase check => " +
-        $"InRange: {detection.InRange}, " +
-        $"HasPlayer: {detection.PlayerPos}, " +
-        $"NotDie: {basicInfo.IsDie}, " +
-        $"NotWaitingAttack: {basicInfo.IsWaitingAttack}, " +
-        $"NotAttacking: {detection.IsAttacking}, " +
-        $"PlayerNotDie: {detection.playerMovement2D.isDie}");
-
         return detection.InRange
+            // AttackState 구현을 위해 추가함, chase 안되면 검토하고 삭제
+            && !detection.InAttackRange
+            //
             && detection.PlayerPos != null
             && !basicInfo.IsDie
-            //&& basicInfo.IsTracing
             && !basicInfo.IsWaitingAttack
             && !detection.IsAttacking
             && !detection.playerMovement2D.isDie;

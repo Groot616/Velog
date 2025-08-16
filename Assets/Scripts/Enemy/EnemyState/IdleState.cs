@@ -3,18 +3,17 @@ using UnityEngine;
 
 public class IdleState : IEnemyState
 {
-    public void Enter(Enemy enemy)
+    private Enemy enemy;
+    public void Enter(Enemy e)
     {
+        enemy = e;
         enemy.ResetFlagsForIdle();
-        
         enemy.basicInfo.MoveDirection = Vector2.zero;
     }
 
-    public void Exit(Enemy enemy)
-    {
-    }
+    public void Exit() { }
 
-    public void Update(Enemy enemy)
+    public void Update()
     {
         Debug.Log("IdleState was called!!");
         enemy.basicInfo.MoveDirection = Vector2.zero;

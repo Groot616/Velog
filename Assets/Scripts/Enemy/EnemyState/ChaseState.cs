@@ -3,43 +3,38 @@ using static UnityEngine.RuleTile.TilingRuleOutput;
 
 public class ChaseState : IEnemyState
 {
-    public void Enter(Enemy enemy)
+    private Enemy enemy;
+    public void Enter(Enemy e)
     {
-        Debug.Log("Enter the ChaseState!!");
+        enemy = e;
         enemy.ResetFlagsForChase();
 
         enemy.basicComponents.Rigidbody.MovePosition(enemy.basicComponents.Rigidbody.position + enemy.basicInfo.MoveDirection * enemy.basicInfo.SpeedForTracing * Time.fixedDeltaTime);
     }
 
-    public void Exit(Enemy enemy)
+    public void Exit()
     {
         Debug.Log("Exit the ChaseState!!");
         enemy.basicComponents.Rigidbody.MovePosition(enemy.basicComponents.Rigidbody.position + enemy.basicInfo.MoveDirection * enemy.basicInfo.Speed * Time.fixedDeltaTime);
     }
 
-    public void Update(Enemy enemy)
+    public void Update()
     {
         Debug.Log("CanChase value : " + enemy.CanChase());
-        if (!enemy.detection.playerMovement2D.isDie)
+        if (enemy.CanAttack())
         {
-            enemy.basicInfo.IsTracing = true;
-
-            if (enemy.CanAttack())
-            {
-                Debug.Log("Can Change Chase to Attack State");
-                //enemy.basicInfo.IsMoving = false;
-                //enemy.ChangeState(enemy.AttackState);
-                return;
-            }
-            else if (enemy.CanChase())
-            {
-                Debug.Log("Chase Start");
-                MoveTowardsPlayer(enemy);
-            }
+            Debug.Log("Can Change Chase to Attack State");
+            enemy.ChangeState(enemy.AttackState);
+            return;
+        }
+        else if (!enemy.detection.playerMovement2D.isDie && enemy.CanChase())
+        {
+            Debug.Log("Chase Start");
+            MoveTowardsPlayer();
         }
     }
 
-    void MoveTowardsPlayer(Enemy enemy)
+    void MoveTowardsPlayer()
     {
         Vector2 direction = new Vector2(enemy.detection.PlayerPos.position.x - enemy.transform.position.x, 0f).normalized;
         enemy.basicInfo.MoveDirection = direction;
@@ -48,9 +43,6 @@ public class ChaseState : IEnemyState
         enemy.basicComponents.Animator.SetBool("isMoving", enemy.basicInfo.IsMoving);
         enemy.basicComponents.SpriteRenderer.flipX = direction.x > 0;
 
-        if (enemy.detection.InAttackRange)
-        {
-            enemy.basicInfo.CurrentState = BasicInfo.State.Attack;
-        }
+        enemy.basicComponents.Rigidbody.MovePosition(enemy.basicComponents.Rigidbody.position + enemy.basicInfo.MoveDirection * enemy.basicInfo.SpeedForTracing * Time.fixedDeltaTime);
     }
 }

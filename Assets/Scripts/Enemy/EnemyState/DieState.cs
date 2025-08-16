@@ -7,12 +7,12 @@ public class DieState : IEnemyState
         enemy.ResetFlagsForDie();
     }
 
-    public void Exit(Enemy enemy)
+    public void Exit()
     {
         throw new System.NotImplementedException();
     }
 
-    public void Update(Enemy enemy)
+    public void Update()
     {
         throw new System.NotImplementedException();
     }
