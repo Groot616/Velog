@@ -14,22 +14,18 @@ public class ChaseState : IEnemyState
 
     public void Exit()
     {
-        Debug.Log("Exit the ChaseState!!");
         enemy.basicComponents.Rigidbody.MovePosition(enemy.basicComponents.Rigidbody.position + enemy.basicInfo.MoveDirection * enemy.basicInfo.Speed * Time.fixedDeltaTime);
     }
 
     public void Update()
     {
-        Debug.Log("CanChase value : " + enemy.CanChase());
         if (enemy.CanAttack())
         {
-            Debug.Log("Can Change Chase to Attack State");
             enemy.ChangeState(enemy.AttackState);
             return;
         }
         else if (!enemy.detection.playerMovement2D.isDie && enemy.CanChase())
         {
-            Debug.Log("Chase Start");
             MoveTowardsPlayer();
         }
     }

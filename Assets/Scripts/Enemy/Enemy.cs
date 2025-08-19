@@ -350,7 +350,7 @@ public class Enemy : MonoBehaviour
     void Update()
     {
         currentState?.Update();
-        Debug.Log("Current State : " + currentState.ToString());
+        //Debug.Log("Current State : " + currentState.ToString());
     }
 
     void FixedUpdate()
@@ -368,157 +368,10 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    /*void HandleAttack()
-    {
-        if (detection.playerMovement2D.isDie)
-        {
-            // 플레이어 죽었으니 공격 중단하고 이동 상태로 전환
-            basicInfo.CurrentState = BasicInfo.State.Move;
-            basicInfo.IsTracing = false;
-            basicInfo.IsMoving = true;
-            basicComponents.Animator.SetBool("isMoving", true);
-            basicComponents.Animator.SetBool("isAttacking", false);
-            detection.IsAttacking = false;
-            return;
-        }
-        else
-        {
-            basicInfo.IsTracing = true;
-            if (detection.IsAttacking || basicInfo.IsWaitingAttack || basicInfo.IsDie)
-                return;
-
-            if (basicInfo.Health <= 0)
-            {
-                basicInfo.CurrentState = BasicInfo.State.Die;
-                return;
-            }
-
-            if (detection.InAttackRange && detection.PlayerPos != null)
-            {
-                if (!detection.playerMovement2D.isDie)
-                {
-                    basicComponents.Animator.SetBool("isMoving", false);
-                    basicComponents.Animator.SetBool("isAttacking", false);
-                    Attack();
-                }
-            }
-            else if (detection.InTotalDetectionRange && detection.PlayerPos != null && basicInfo.IsTracing)
-            {
-                if (!detection.playerMovement2D.isDie)
-                {
-                    basicInfo.CurrentState = BasicInfo.State.Chase;
-                    return;
-                }
-            }
-            else
-            {
-                basicInfo.CurrentState = BasicInfo.State.Move;
-                return;
-            }
-        }
-    }*/
-
-    /*void HandleDie()
-    {
-        Die();
-    }
-    */
-
     bool CheckPlayerInRange(Vector2 origin, float radius, LayerMask layer)
     {
         return Physics2D.OverlapCircle(origin, radius, layer) != null;
     }
-
-    /*void Attack()
-    {
-        basicInfo.IsTracing = false;
-        basicInfo.IsMoving = false;
-        basicComponents.Animator.SetBool("isMoving", basicInfo.IsMoving);
-        detection.IsAttacking = true;
-        basicComponents.Animator.SetBool("isAttacking", detection.IsAttacking);
-
-        Vector2 attackPoint = new Vector2(detection.PlayerPos.position.x, transform.position.y);
-        Vector2 returnPoint = transform.position;
-        if (!detection.IsTeleporting)
-        {
-            StartCoroutine(TeleportAndShake(attackPoint, returnPoint));
-            StartChargeEffect();
-        }
-    }*/
-
-    /*private IEnumerator TeleportAndShake(Vector2 targetPos, Vector2 returnPos)
-    {
-        detection.IsTeleporting = true;
-        yield return new WaitForSeconds(basicInfo.WaitingAttack);
-        transform.position = targetPos;
-        StartCoroutine(CameraShake(0.3f, 0.1f));
-        // 추가 코드
-        if (basicInfo.attackRange != null)
-        {
-            basicInfo.attackRange.GetComponent<AttackRange>().EnableAttackerCollider();
-        }
-        yield return new WaitForSeconds(0.1f);
-        // 추가 코드
-        // 추가 코드
-        if (basicInfo.attackRange != null)
-            basicInfo.attackRange.GetComponent<AttackRange>().DisableAttackerCollider();
-        // 추가 코드
-
-        yield return new WaitForSeconds(1f);
-        
-        transform.position = returnPos;
-
-        yield return new WaitForSeconds(1.7f);
-        basicComponents.Animator.SetBool("isAttacking", detection.IsAttacking);
-        detection.IsAttacking = false;
-        detection.IsTeleporting = false;
-
-        if (detection.InAttackRange && detection.PlayerPos != null && !basicInfo.IsDie)
-        {
-            basicInfo.CurrentState = BasicInfo.State.Attack;
-            basicInfo.IsMoving = false;
-            basicComponents.Animator.SetBool("isMoving", false);
-            basicComponents.Animator.SetBool("isAttacking", true);
-        }
-        else
-        {
-            if (detection.InTotalDetectionRange && detection.PlayerPos != null)
-            {
-                basicInfo.CurrentState = BasicInfo.State.Chase;
-                basicInfo.IsTracing = true;
-                basicComponents.Animator.SetBool("isMoving", true);
-                basicComponents.Animator.SetBool("isAttacking", false);
-            }
-            else
-            {
-                basicInfo.CurrentState = BasicInfo.State.Move;
-                basicInfo.IsMoving = true;
-                basicComponents.Animator.SetBool("isMoving", true);
-                basicComponents.Animator.SetBool("isAttacking", false);
-            }
-            }
-        }*/
-
-    /*private IEnumerator CameraShake(float duration, float magnitude)
-    {
-        basicInfo.Cam = Camera.main;
-        if (basicInfo.Cam == null) yield break;
-
-        Vector3 OriginPos = basicInfo.Cam.transform.position;
-        float elapsed = 0f;
-
-        while (elapsed < duration)
-        {
-            float x = Random.Range(-1f, 1f) * magnitude;
-            float y = Random.Range(-1f, 1f) * magnitude;
-
-            basicInfo.Cam.transform.position = new Vector3(OriginPos.x + x, OriginPos.y + y, OriginPos.z);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        basicInfo.Cam.transform.position = OriginPos;
-    }*/
 
     private void OnDrawGizmosSelected()
     {
@@ -541,30 +394,6 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    /*public void StartChargeEffect()
-    {
-        if (basicInfo.ChargeCoroutine != null)
-            StopCoroutine(basicInfo.ChargeCoroutine);
-        basicInfo.ChargeCoroutine = StartCoroutine(ChargeRedEffect());
-
-    }
-
-    private IEnumerator ChargeRedEffect()
-    {
-        basicInfo.OriginColor = basicComponents.SpriteRenderer.color;
-        Color targetColor = new Color(1f, 0.4f, 0.4f);
-
-        float elapsed = 0f;
-        while (elapsed < basicInfo.WaitingAttack)
-        {
-            float t = elapsed / basicInfo.WaitingAttack;
-            basicComponents.SpriteRenderer.color = Color.Lerp(basicInfo.OriginColor, targetColor, t);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-        basicComponents.SpriteRenderer.color = basicInfo.OriginColor;
-    }
-
     public void TakeDamage(float dmg)
     {
         if (basicInfo.IsDie)
@@ -577,58 +406,19 @@ public class Enemy : MonoBehaviour
         if (basicInfo.Health <= 0)
         {
             basicInfo.MoveDirection = Vector2.zero;
-            basicInfo.CurrentState = BasicInfo.State.Die;
+            ChangeState(DieState);
             return;
         }
 
         basicInfo.CurrentState = BasicInfo.State.Chase;
     }
 
-    public void Die()
-    {
-        if (basicInfo.IsDieAnimationTriggered)
-            return;
-
-        basicInfo.IsDieAnimationTriggered = true;
-        Collider2D collider = GetComponent<Collider2D>();
-        if (collider != null)
-            collider.enabled = false;
-
-        basicComponents.Animator.SetTrigger("Die");
-
-        StartCoroutine(DeathTeloportSequence());
-    }
-
-        private IEnumerator DeathTeloportSequence()
-    {
-        Vector2 OriginPos = transform.position;
-
-        int repeatTwice = 0;
-        while (repeatTwice < 7)
-        {
-            transform.position = OriginPos + new Vector2(-0.05f, 0f);
-            yield return new WaitForSeconds(0.05f);
-
-            transform.position = OriginPos + new Vector2(0.05f, 0f);
-            yield return new WaitForSeconds(0.05f);
-            ++repeatTwice;
-        }
-        transform.position = OriginPos;
-
-        basicInfo.IsDie = true;
-        basicInfo.IsMoving = false;
-        basicInfo.IsWaitingAttack = false;
-        basicInfo.IsTracing = false;
-        yield return new WaitForSeconds(2f);
-        Destroy(gameObject);
-    }*/
-
     public void ResetFlagsForIdle()
     {
         basicInfo.IsMoving = false;
         basicInfo.IsWaitingAttack = false;
         basicInfo.IsTracing = false;
-        basicInfo.IsDie = false;
+        basicInfo.IsDie = true;
         basicInfo.IsAttacked = false;
         basicInfo.IsDieAnimationTriggered = false;
         detection.IsAttacking = false;
@@ -668,7 +458,7 @@ public class Enemy : MonoBehaviour
         basicInfo.IsAttacked = false;
         basicInfo.IsDieAnimationTriggered = false;
         detection.IsAttacking = true;
-        detection.IsTeleporting = true;
+        detection.IsTeleporting = false;
     }
 
     public void ResetFlagsForDie()
@@ -704,17 +494,19 @@ public class Enemy : MonoBehaviour
             && !detection.IsAttacking;
     }
 
+    // InRange 내부에 있을 경우
     public bool CanChase()
     {
-        return detection.InRange
-            // AttackState 구현을 위해 추가함, chase 안되면 검토하고 삭제
-            && !detection.InAttackRange
-            //
+        bool common = !detection.InAttackRange
             && detection.PlayerPos != null
             && !basicInfo.IsDie
             && !basicInfo.IsWaitingAttack
             && !detection.IsAttacking
             && !detection.playerMovement2D.isDie;
+
+        bool first = detection.InRange;
+        bool second = detection.InTotalDetectionRange && basicInfo.IsTracing;
+        return common & (first || second);
     }
 
     public bool CanAttack()
@@ -723,15 +515,8 @@ public class Enemy : MonoBehaviour
             && detection.PlayerPos != null 
             && !basicInfo.IsDie 
             && basicInfo.IsTracing
-            && !basicInfo.IsWaitingAttack
-            && !detection.IsAttacking
             && !detection.playerMovement2D.isDie;
     }
-
-    /*public bool CanDie()
-    {
-
-    }*/
 
     public void RunCoroutine(IEnumerator routine)
     {

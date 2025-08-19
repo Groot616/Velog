@@ -15,7 +15,6 @@ public class IdleState : IEnemyState
 
     public void Update()
     {
-        Debug.Log("IdleState was called!!");
         enemy.basicInfo.MoveDirection = Vector2.zero;
 
         // player가 공격 범위 내 존재할 경우 attack state 전환

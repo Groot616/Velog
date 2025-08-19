@@ -14,14 +14,13 @@ public class AttackState : IEnemyState
 
     public void Update()
     {
-        // TODO: 공격 범위를 벗어나면 Chase State로 진입
-        // 그외 추가
         if (enemy.CanChase())
         {
             enemy.ChangeState(enemy.ChaseState);
             return;
         }
-        else if(enemy.CanAttack())
+        
+        if(enemy.CanAttack())
         {
             Attack();
         }
@@ -29,7 +28,6 @@ public class AttackState : IEnemyState
 
     void Attack()
     {
-        enemy.basicInfo.IsTracing = false;
         enemy.basicInfo.IsMoving = false;
         enemy.basicComponents.Animator.SetBool("isMoving", enemy.basicInfo.IsMoving);
         enemy.detection.IsAttacking = true;
@@ -138,5 +136,4 @@ public class AttackState : IEnemyState
         }
         enemy.basicComponents.SpriteRenderer.color = enemy.basicInfo.OriginColor;
     }
-
 }
