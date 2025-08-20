@@ -38,6 +38,7 @@ public class ChaseState : IEnemyState
         enemy.basicInfo.IsMoving = true;
         enemy.basicComponents.Animator.SetBool("isMoving", enemy.basicInfo.IsMoving);
         enemy.basicComponents.SpriteRenderer.flipX = direction.x > 0;
+        enemy.FlipDetectionCenterAccordingToDetection();
 
         enemy.basicComponents.Rigidbody.MovePosition(enemy.basicComponents.Rigidbody.position + enemy.basicInfo.MoveDirection * enemy.basicInfo.SpeedForTracing * Time.fixedDeltaTime);
     }

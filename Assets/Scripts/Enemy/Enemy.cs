@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 [System.Serializable]
 public class BasicComponents
@@ -169,6 +170,14 @@ public class BasicInfo
         get => isWaiting;
         set => isWaiting = value;
     }
+
+    [SerializeField]
+    private float attackOffset = 0.5f;
+    public float AttackOffset
+    {
+        get => attackOffset;
+        set => attackOffset = value;
+    }
 }
 
 [System.Serializable]
@@ -328,7 +337,7 @@ public class Enemy : MonoBehaviour
 
         basicInfo.CurrentState = BasicInfo.State.Move;
         basicComponents.Init(gameObject);
-        /*basicInfo.attackRange.GetComponent<AttackRange>().SetDamage(basicInfo.Damage);*/
+        basicInfo.attackRange.GetComponent<AttackRange>().SetDamage(basicInfo.Damage);
 
         Vector2 detectionPos = detection.DetectionCenter.localPosition;
         detectionPos.x = Mathf.Abs(detectionPos.x);
@@ -350,7 +359,6 @@ public class Enemy : MonoBehaviour
     void Update()
     {
         currentState?.Update();
-        //Debug.Log("Current State : " + currentState.ToString());
     }
 
     void FixedUpdate()
@@ -358,6 +366,12 @@ public class Enemy : MonoBehaviour
         detection.InRange = CheckPlayerInRange(detection.DetectionCenter.position, detection.DetectRadius, detection.PlayerLayer);
         detection.InAttackRange = CheckPlayerInRange(detection.AttackCenter.position, detection.AttackRadius, detection.PlayerLayer);
         detection.InTotalDetectionRange = CheckPlayerInRange(detection.TotalDetectionCenter.position, detection.TotalDetectionRadius, detection.PlayerLayer);
+
+        if (detection.InAttackRange || detection.InRange)
+            basicInfo.IsTracing = true;
+
+        if(!detection.InTotalDetectionRange && basicInfo.IsTracing)
+            basicInfo.IsTracing = false;
 
         if (basicInfo.IsMoving && !detection.IsTeleporting)
         {
@@ -410,7 +424,29 @@ public class Enemy : MonoBehaviour
             return;
         }
 
-        basicInfo.CurrentState = BasicInfo.State.Chase;
+        ChangeState(ChaseState);
+    }
+
+    public void FlipDetectionCenterAccordingToDetection()
+    {
+        if (detection == null || detection.DetectionCenter == null || detection.AttackCenter == null)
+            return;
+
+        Vector2 detectionOriginalPos = detection.DetectionCenterOriginalLocalPos;
+        Vector2 attackOriginalPos = detection.AttackCenterOriginalLocalPos;
+        bool facingRight = basicComponents.SpriteRenderer.flipX;
+        if (facingRight)
+        {
+            // 오른쪽 바라볼 때는 x를 양수로 유지, y는 그대로
+            detection.DetectionCenter.localPosition = new Vector2(Mathf.Abs(detectionOriginalPos.x), detectionOriginalPos.y);
+            detection.AttackCenter.localPosition = new Vector2(Mathf.Abs(attackOriginalPos.x), attackOriginalPos.y);
+        }
+        else
+        {
+            // 왼쪽 바라볼 때는 x를 음수로 뒤집고, y는 그대로
+            detection.DetectionCenter.localPosition = new Vector2(-Mathf.Abs(detectionOriginalPos.x), detectionOriginalPos.y);
+            detection.AttackCenter.localPosition = new Vector2(-Mathf.Abs(attackOriginalPos.x), attackOriginalPos.y);
+        }
     }
 
     public void ResetFlagsForIdle()

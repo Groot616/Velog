@@ -29,6 +29,9 @@ public class PlayerMovement2D : MonoBehaviour
 
     public bool isDie = false;
 
+    [SerializeField]
+    private bool isKnockBack = false;
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -43,7 +46,7 @@ public class PlayerMovement2D : MonoBehaviour
     {
         if (!isDie)
         {
-            if (!isAttacking)
+            if (!isAttacking && !isKnockBack)
             {
                 moveInput = Input.GetAxisRaw("Horizontal");
             }
@@ -71,12 +74,12 @@ public class PlayerMovement2D : MonoBehaviour
             }
             animator.SetBool("isMoving", isMoving);
 
-            if (Input.GetKeyDown(KeyCode.C) && !isAttacking)
+            if (Input.GetKeyDown(KeyCode.C) && !isAttacking && !isKnockBack)
             {
                 Attack();
             }
 
-            if (Input.GetKeyDown(KeyCode.X) && !isAttacking && !isJumping)
+            if (Input.GetKeyDown(KeyCode.X) && !isAttacking && !isJumping && !isKnockBack)
             {
                 Jump();
             }
@@ -165,10 +168,37 @@ public class PlayerMovement2D : MonoBehaviour
         animator.SetBool("isMoving", false);
         StartCoroutine(PlayDieAnimation());
     }
+
+    private void KnockBack()
+    {
+
+    }
     
     private IEnumerator PlayDieAnimation()
     {
         yield return new WaitForSeconds(10f);
         Destroy(gameObject);
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        int playerCollisionLayer = LayerMask.NameToLayer("PlayerCollision");
+        if(collision.gameObject.layer == playerCollisionLayer)
+        {
+            Debug.Log("OnTriggerEnter2D occured!!");
+            StartCoroutine(HandleKnockBack());
+
+            
+        }
+    }
+
+    private IEnumerator HandleKnockBack()
+    {
+        isKnockBack = true;
+        isMoving = false;
+        animator.SetTrigger("isKnockBack");
+        yield return new WaitForSeconds(1f);
+
+        isKnockBack = false;
     }
 }

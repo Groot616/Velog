@@ -20,6 +20,11 @@ public class MoveState : IEnemyState
             enemy.ChangeState(enemy.ChaseState);
             return;
         }
+        else if(enemy.CanAttack())
+        {
+            enemy.ChangeState(enemy.AttackState);
+            return;
+        }
         else if (enemy.CanMove())
         {
             Patrol();
@@ -35,7 +40,7 @@ public class MoveState : IEnemyState
         if (enemy.basicInfo.IsMoving)
         {
             enemy.basicComponents.SpriteRenderer.flipX = targetPos.x > enemy.transform.position.x;
-            FlipDetectionCenterAccordingToDetection();
+            enemy.FlipDetectionCenterAccordingToDetection();
         }
 
         if (Vector2.Distance(enemy.transform.position, targetPos) < 0.1f)
@@ -58,25 +63,25 @@ public class MoveState : IEnemyState
         enemy.basicInfo.CurrentState = BasicInfo.State.Move;
     }
 
-    void FlipDetectionCenterAccordingToDetection()
-    {
-        if (enemy.detection == null || enemy.detection.DetectionCenter == null || enemy.detection.AttackCenter == null)
-            return;
+    //void FlipDetectionCenterAccordingToDetection()
+    //{
+    //    if (enemy.detection == null || enemy.detection.DetectionCenter == null || enemy.detection.AttackCenter == null)
+    //        return;
 
-        Vector2 detectionOriginalPos = enemy.detection.DetectionCenterOriginalLocalPos;
-        Vector2 attackOriginalPos = enemy.detection.AttackCenterOriginalLocalPos;
-        bool facingRight = enemy.basicComponents.SpriteRenderer.flipX;
-        if (facingRight)
-        {
-            // 오른쪽 바라볼 때는 x를 양수로 유지, y는 그대로
-            enemy.detection.DetectionCenter.localPosition = new Vector2(Mathf.Abs(detectionOriginalPos.x), detectionOriginalPos.y);
-            enemy.detection.AttackCenter.localPosition = new Vector2(Mathf.Abs(attackOriginalPos.x), attackOriginalPos.y);
-        }
-        else
-        {
-            // 왼쪽 바라볼 때는 x를 음수로 뒤집고, y는 그대로
-            enemy.detection.DetectionCenter.localPosition = new Vector2(-Mathf.Abs(detectionOriginalPos.x), detectionOriginalPos.y);
-            enemy.detection.AttackCenter.localPosition = new Vector2(-Mathf.Abs(attackOriginalPos.x), attackOriginalPos.y);
-        }
-    }
+    //    Vector2 detectionOriginalPos = enemy.detection.DetectionCenterOriginalLocalPos;
+    //    Vector2 attackOriginalPos = enemy.detection.AttackCenterOriginalLocalPos;
+    //    bool facingRight = enemy.basicComponents.SpriteRenderer.flipX;
+    //    if (facingRight)
+    //    {
+    //        // 오른쪽 바라볼 때는 x를 양수로 유지, y는 그대로
+    //        enemy.detection.DetectionCenter.localPosition = new Vector2(Mathf.Abs(detectionOriginalPos.x), detectionOriginalPos.y);
+    //        enemy.detection.AttackCenter.localPosition = new Vector2(Mathf.Abs(attackOriginalPos.x), attackOriginalPos.y);
+    //    }
+    //    else
+    //    {
+    //        // 왼쪽 바라볼 때는 x를 음수로 뒤집고, y는 그대로
+    //        enemy.detection.DetectionCenter.localPosition = new Vector2(-Mathf.Abs(detectionOriginalPos.x), detectionOriginalPos.y);
+    //        enemy.detection.AttackCenter.localPosition = new Vector2(-Mathf.Abs(attackOriginalPos.x), attackOriginalPos.y);
+    //    }
+    //}
 }

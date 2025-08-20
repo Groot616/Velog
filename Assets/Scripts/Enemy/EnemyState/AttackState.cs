@@ -24,6 +24,12 @@ public class AttackState : IEnemyState
         {
             Attack();
         }
+
+        if(enemy.CanMove())
+        {
+            enemy.ChangeState(enemy.MoveState);
+            return;
+        }
     }
 
     void Attack()
@@ -35,6 +41,12 @@ public class AttackState : IEnemyState
 
         Vector2 attackPoint = new Vector2(enemy.detection.PlayerPos.position.x, enemy.transform.position.y);
         Vector2 returnPoint = enemy.transform.position;
+
+        if (attackPoint.x < enemy.transform.position.x)
+            attackPoint.x += enemy.basicInfo.AttackOffset;
+        else
+            attackPoint.x -= enemy.basicInfo.AttackOffset;
+
         if (!enemy.detection.IsTeleporting)
         {
             enemy.RunCoroutine(TeleportAndShake(attackPoint, returnPoint));
