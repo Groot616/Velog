@@ -38,9 +38,10 @@ public class AttackRange : MonoBehaviour
     {
         if (attackerType == AttackerType.Player && collision.CompareTag("Enemy"))
         {
-            Enemy enemy = collision.GetComponent<Enemy>();
+            Enemy enemy = collision.GetComponentInParent<Enemy>();
             if (enemy != null)
             {
+                Debug.Log("enemy is not null!!");
                 enemy.TakeDamage(damage);
             }
         }

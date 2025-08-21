@@ -1,4 +1,5 @@
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class PlayerMovement2D : MonoBehaviour
@@ -31,6 +32,12 @@ public class PlayerMovement2D : MonoBehaviour
 
     [SerializeField]
     private bool isKnockBack = false;
+
+    [SerializeField]
+    private float knockBackLength = 1f;
+
+    [SerializeField]
+    private float knockBackPower = 5f;
 
     void Start()
     {
@@ -95,10 +102,15 @@ public class PlayerMovement2D : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (!isAttacking && !isDie)
+        //if (!isAttacking && !isDie && !isKnockBack)
+        //    rb.linearVelocity = new Vector2(moveInput * moveSpeed, rb.linearVelocity.y);
+        //else
+        //    rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+        if (!isAttacking && !isDie && !isKnockBack)
+        {
             rb.linearVelocity = new Vector2(moveInput * moveSpeed, rb.linearVelocity.y);
-        else
-            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+        }
+
     }
 
     private void Attack()
@@ -148,7 +160,6 @@ public class PlayerMovement2D : MonoBehaviour
 
     public void TakeDamage(float dmg)
     {
-        Debug.Log("Player's TakeDamge() is called!");
         if (isDie)
             return;
 
@@ -171,7 +182,8 @@ public class PlayerMovement2D : MonoBehaviour
 
     private void KnockBack()
     {
-
+        TakeDamage(5f);
+        KnockBackByOffset(knockBackLength);
     }
     
     private IEnumerator PlayDieAnimation()
@@ -185,7 +197,6 @@ public class PlayerMovement2D : MonoBehaviour
         int playerCollisionLayer = LayerMask.NameToLayer("PlayerCollision");
         if(collision.gameObject.layer == playerCollisionLayer)
         {
-            Debug.Log("OnTriggerEnter2D occured!!");
             StartCoroutine(HandleKnockBack());
 
             
@@ -197,8 +208,18 @@ public class PlayerMovement2D : MonoBehaviour
         isKnockBack = true;
         isMoving = false;
         animator.SetTrigger("isKnockBack");
-        yield return new WaitForSeconds(1f);
+        KnockBack();
+        yield return new WaitForSeconds(0.8f);
 
         isKnockBack = false;
+    }
+
+    private void KnockBackByOffset(float length)
+    {
+        //Vector2 direction = spriteRenderer.flipX ? Vector2.left : Vector2.right;
+        //Vector2 knockbackDir = direction;
+        //rb.AddForce(knockbackDir * knockBackPower, ForceMode2D.Impulse);
+        Vector2 knockbackDir = moveInput >= 0 ? Vector2.left : Vector2.right;
+        rb.linearVelocity = knockbackDir * knockBackPower;
     }
 }
