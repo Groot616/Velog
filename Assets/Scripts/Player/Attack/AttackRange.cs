@@ -41,7 +41,6 @@ public class AttackRange : MonoBehaviour
             Enemy enemy = collision.GetComponentInParent<Enemy>();
             if (enemy != null)
             {
-                Debug.Log("enemy is not null!!");
                 enemy.TakeDamage(damage);
             }
         }

@@ -363,9 +363,18 @@ public class Enemy : MonoBehaviour
 
     void FixedUpdate()
     {
-        detection.InRange = CheckPlayerInRange(detection.DetectionCenter.position, detection.DetectRadius, detection.PlayerLayer);
-        detection.InAttackRange = CheckPlayerInRange(detection.AttackCenter.position, detection.AttackRadius, detection.PlayerLayer);
-        detection.InTotalDetectionRange = CheckPlayerInRange(detection.TotalDetectionCenter.position, detection.TotalDetectionRadius, detection.PlayerLayer);
+        if (!detection.playerMovement2D.isDie)
+        {
+            detection.InRange = CheckPlayerInRange(detection.DetectionCenter.position, detection.DetectRadius, detection.PlayerLayer);
+            detection.InAttackRange = CheckPlayerInRange(detection.AttackCenter.position, detection.AttackRadius, detection.PlayerLayer);
+            detection.InTotalDetectionRange = CheckPlayerInRange(detection.TotalDetectionCenter.position, detection.TotalDetectionRadius, detection.PlayerLayer);
+        }
+        else
+        {
+            detection.InRange = false;
+            detection.InAttackRange = false;
+            detection.InTotalDetectionRange = false;
+        }
 
         if (detection.InAttackRange || detection.InRange)
             basicInfo.IsTracing = true;
@@ -493,7 +502,7 @@ public class Enemy : MonoBehaviour
         basicInfo.IsDie = false;
         basicInfo.IsAttacked = false;
         basicInfo.IsDieAnimationTriggered = false;
-        detection.IsAttacking = true;
+        detection.IsAttacking = false;
         detection.IsTeleporting = false;
     }
 
@@ -547,10 +556,12 @@ public class Enemy : MonoBehaviour
 
     public bool CanAttack()
     {
+        
         return detection.InAttackRange 
             && detection.PlayerPos != null 
             && !basicInfo.IsDie 
             && basicInfo.IsTracing
+            && !detection.IsAttacking
             && !detection.playerMovement2D.isDie;
     }
 

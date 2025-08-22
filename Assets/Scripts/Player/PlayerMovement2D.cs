@@ -117,12 +117,13 @@ public class PlayerMovement2D : MonoBehaviour
     {
         if (isAttacking) return;
 
+        // TODO: 점프 공격시 움직일 수 있도록 수정
+        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
         isAttacking = true;
         animator.SetTrigger("Attack");
 
         if (attackRange != null)
         {
-            //attackRange.SetActive(true);
             attackRange.GetComponent<AttackRange>().EnableAttackerCollider();
         }
 
@@ -197,9 +198,7 @@ public class PlayerMovement2D : MonoBehaviour
         int playerCollisionLayer = LayerMask.NameToLayer("PlayerCollision");
         if(collision.gameObject.layer == playerCollisionLayer)
         {
-            StartCoroutine(HandleKnockBack());
-
-            
+            StartCoroutine(HandleKnockBack());   
         }
     }
 

@@ -4,6 +4,7 @@ using System.Collections;
 public class AttackState : IEnemyState
 {
     private Enemy enemy;
+    private bool attackScheduled = false;
     public void Enter(Enemy e)
     {
         enemy = e;
@@ -20,8 +21,9 @@ public class AttackState : IEnemyState
             return;
         }
         
-        if(enemy.CanAttack())
+        if(enemy.CanAttack() && !attackScheduled)
         {
+            attackScheduled = true;
             Attack();
         }
 
@@ -34,6 +36,9 @@ public class AttackState : IEnemyState
 
     void Attack()
     {
+        if (enemy.detection.IsAttacking || enemy.detection.IsTeleporting)
+            return;
+
         enemy.basicInfo.IsMoving = false;
         enemy.basicComponents.Animator.SetBool("isMoving", enemy.basicInfo.IsMoving);
         enemy.detection.IsAttacking = true;
@@ -51,6 +56,7 @@ public class AttackState : IEnemyState
         {
             enemy.RunCoroutine(TeleportAndShake(attackPoint, returnPoint));
             StartChargeEffect();
+            
         }
     }
 
@@ -69,6 +75,13 @@ public class AttackState : IEnemyState
         if (enemy.basicInfo.attackRange != null)
             enemy.basicInfo.attackRange.GetComponent<AttackRange>().DisableAttackerCollider();
 
+        // 코드 추가
+        if(enemy.detection.playerMovement2D.isDie)
+        {
+            
+        }
+        // 코드 추가
+
         yield return new WaitForSeconds(1f);
         
         enemy.transform.position = returnPos;
@@ -77,10 +90,11 @@ public class AttackState : IEnemyState
         enemy.basicComponents.Animator.SetBool("isAttacking", enemy.detection.IsAttacking);
         enemy.detection.IsAttacking = false;
         enemy.detection.IsTeleporting = false;
+        attackScheduled = false;
 
         if (enemy.detection.InAttackRange && enemy.detection.PlayerPos != null && !enemy.basicInfo.IsDie)
         {
-            enemy.basicInfo.CurrentState = BasicInfo.State.Attack;
+            enemy.ChangeState(enemy.AttackState);
             enemy.basicInfo.IsMoving = false;
             enemy.basicComponents.Animator.SetBool("isMoving", false);
             enemy.basicComponents.Animator.SetBool("isAttacking", true);
@@ -89,14 +103,14 @@ public class AttackState : IEnemyState
         {
             if (enemy.detection.InTotalDetectionRange && enemy.detection.PlayerPos != null)
             {
-                enemy.basicInfo.CurrentState = BasicInfo.State.Chase;
+                enemy.ChangeState(enemy.ChaseState);
                 enemy.basicInfo.IsTracing = true;
                 enemy.basicComponents.Animator.SetBool("isMoving", true);
                 enemy.basicComponents.Animator.SetBool("isAttacking", false);
             }
             else
             {
-                enemy.basicInfo.CurrentState = BasicInfo.State.Move;
+                enemy.ChangeState(enemy.MoveState);
                 enemy.basicInfo.IsMoving = true;
                 enemy.basicComponents.Animator.SetBool("isMoving", true);
                 enemy.basicComponents.Animator.SetBool("isAttacking", false);

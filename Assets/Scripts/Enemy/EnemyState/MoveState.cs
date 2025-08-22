@@ -5,6 +5,7 @@ using static UnityEngine.RuleTile.TilingRuleOutput;
 public class MoveState : IEnemyState
 {
     private Enemy enemy;
+
     public void Enter(Enemy e)
     {
         enemy = e;
@@ -15,6 +16,7 @@ public class MoveState : IEnemyState
 
     public void Update()
     {
+
         if (enemy.CanChase())
         {
             enemy.ChangeState(enemy.ChaseState);
@@ -62,26 +64,4 @@ public class MoveState : IEnemyState
         enemy.basicComponents.Animator.SetBool("isMoving", enemy.basicInfo.IsMoving);
         enemy.basicInfo.CurrentState = BasicInfo.State.Move;
     }
-
-    //void FlipDetectionCenterAccordingToDetection()
-    //{
-    //    if (enemy.detection == null || enemy.detection.DetectionCenter == null || enemy.detection.AttackCenter == null)
-    //        return;
-
-    //    Vector2 detectionOriginalPos = enemy.detection.DetectionCenterOriginalLocalPos;
-    //    Vector2 attackOriginalPos = enemy.detection.AttackCenterOriginalLocalPos;
-    //    bool facingRight = enemy.basicComponents.SpriteRenderer.flipX;
-    //    if (facingRight)
-    //    {
-    //        // 오른쪽 바라볼 때는 x를 양수로 유지, y는 그대로
-    //        enemy.detection.DetectionCenter.localPosition = new Vector2(Mathf.Abs(detectionOriginalPos.x), detectionOriginalPos.y);
-    //        enemy.detection.AttackCenter.localPosition = new Vector2(Mathf.Abs(attackOriginalPos.x), attackOriginalPos.y);
-    //    }
-    //    else
-    //    {
-    //        // 왼쪽 바라볼 때는 x를 음수로 뒤집고, y는 그대로
-    //        enemy.detection.DetectionCenter.localPosition = new Vector2(-Mathf.Abs(detectionOriginalPos.x), detectionOriginalPos.y);
-    //        enemy.detection.AttackCenter.localPosition = new Vector2(-Mathf.Abs(attackOriginalPos.x), attackOriginalPos.y);
-    //    }
-    //}
 }
